@@ -2,6 +2,7 @@
 
 import {useAuthStore} from '@/stores/auth.store';
 import {LoginErrorResponse, LoginSuccessResponse} from '@/types/auth';
+import axios from 'axios';
 import {useRouter} from 'next/navigation';
 import {useEffect} from 'react';
 
@@ -13,18 +14,12 @@ export default function Login() {
             console.log('Отправка тестового запроса...');
 
             try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        login: 'txzy2',
-                        password: 'Qwerty@123'
-                    })
+                const response = await axios.post('/api/auth/login', {
+                    login: 'txzy2',
+                    password: 'Qwerty@123'
                 });
 
-                const result: LoginSuccessResponse | LoginErrorResponse = await response.json();
+                const result: LoginSuccessResponse | LoginErrorResponse = await response.data;
 
                 if (result.success) {
                     // ✅ Теперь TypeScript знает, что result.data - это объект

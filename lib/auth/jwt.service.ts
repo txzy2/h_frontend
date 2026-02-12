@@ -18,9 +18,9 @@ export class JwtService {
     /**
      * Проверяет JWT токен с проверкой подписи
      */
-    static verify(token: string, secret: string): JwtPayload | null {
+    static verify(token: string): JwtPayload | null {
         try {
-            return jwt.verify(token, secret) as JwtPayload;
+            return jwt.verify(token, process.env.JWT_ACCESS_SECRET as string) as JwtPayload;
         } catch (error) {
             console.error('JWT verification error:', error);
             return null;

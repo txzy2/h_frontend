@@ -3,9 +3,28 @@
 import {useAuthStore} from '@/stores/auth.store';
 
 import {AuthState} from '@/stores/auth.store';
+import {LoginSuccessResponse} from '@/types/auth';
+import axios from 'axios';
+import {useRouter} from 'next/navigation';
+import {useEffect} from 'react';
 
 export default function Home() {
+    const {setUser} = useAuthStore();
     const user = useAuthStore((state: AuthState) => state.user);
+    const router = useRouter();
+
+    useEffect(() => {
+        const checkUser = async () => {
+            try {
+                const {data} = await axios.get('/api/auth/me');
+                if (data.success) setUser(data.data);
+                else router.push('/login');
+            } catch (e) {
+                router.push('/login');
+            }
+        };
+        checkUser();
+    }, []);
 
     return (
         <div className='flex flex-col min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black'>
