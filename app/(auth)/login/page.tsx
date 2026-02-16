@@ -16,7 +16,7 @@ export default function Login() {
             try {
                 const response = await axios.post('/api/auth/login', {
                     login: 'txzy2',
-                    password: 'Qwerty@123'
+                    password: 'kal%08Py'
                 });
 
                 const result: LoginSuccessResponse | LoginErrorResponse = await response.data;

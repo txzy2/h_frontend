@@ -25,6 +25,8 @@ export class AuthService {
                 credentials
             );
 
+            console.log('Auth response:', response.data);
+
             return response.data;
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -51,14 +53,24 @@ export class AuthService {
     }
 
     /**
-     * Проверяет успешность ответа от auth сервера
+     * Проверяет успешность ответа от auth сервера.
+     * Нормализует токены: бэкенд может вернуть snake_case (access_token), мы используем camelCase (accessToken).
      */
     static validateAuthResponse(response: AuthServerResponse): AuthTokens {
         if (!response.success) {
             throw new AuthenticationError('Authentication failed', 401);
         }
 
-        return response.data.tokens;
+        const raw = response.data.tokens as
+            | AuthTokens
+            | {access_token: string; refresh_token: string};
+        if ('access_token' in raw) {
+            return {
+                accessToken: raw.access_token,
+                refreshToken: raw.refresh_token
+            };
+        }
+        return raw;
     }
 }
 

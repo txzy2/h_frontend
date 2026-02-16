@@ -3,7 +3,7 @@ import {NextRequest, NextResponse} from 'next/server';
 import {AuthService} from '@/lib/auth/auth.service';
 import {CookieService} from '@/lib/auth/cookie.service';
 import {LoginSuccessResponse, LoginErrorResponse} from '@/types/auth';
-import {JwtService} from '@/lib/auth/jwt.service';
+import {JwtService, JwtSecretError} from '@/lib/auth/jwt.service';
 
 export async function GET(
     request: NextRequest
@@ -35,6 +35,13 @@ export async function GET(
         // 4. Возвращаем успешный ответ
         return NextResponse.json<LoginSuccessResponse>({success: true, data: userData});
     } catch (err) {
+        if (err instanceof JwtSecretError) {
+            console.error('JWT config error in /me:', err.message);
+            return NextResponse.json<LoginErrorResponse>(
+                {success: false, data: 'Server configuration error'},
+                {status: 503}
+            );
+        }
         console.error('Error in /me:', err);
         return NextResponse.json<LoginErrorResponse>(
             {success: false, data: 'Internal server error'},
