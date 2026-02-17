@@ -2,9 +2,20 @@
 import {UserData} from './jwt.types';
 
 // Внешний auth сервер
-export type AuthTokens = {
+/** Токены в camelCase (используются внутри Next.js) */
+export interface AuthTokens {
     accessToken: string;
     refreshToken: string;
+}
+
+export type AuthAPITokens = {
+    access_token: string;
+    refresh_token: string;
+};
+
+export type RefreshAPITokensResponse = {
+    success: boolean;
+    tokens: AuthAPITokens;
 };
 
 export type AuthServerResponseData = {
@@ -28,6 +39,11 @@ export type LoginErrorResponse = {
     data: string;
 };
 
+export type LogoutApiResponse = {
+    success: boolean;
+    data: string;
+};
+
 export type LoginResponse = LoginSuccessResponse | LoginErrorResponse;
 
 export type UserPermissionsResult = {
@@ -38,4 +54,9 @@ export type UserPermissionsResult = {
 export type PermissionsData = {
     success: boolean;
     data: UserPermissionsResult[];
+};
+
+export type LogoutResponse = {
+    success: boolean;
+    data: string;
 };

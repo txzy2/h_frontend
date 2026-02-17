@@ -1,51 +1,69 @@
 // app/api/auth/me/route.ts
 import {NextRequest, NextResponse} from 'next/server';
-import {AuthService} from '@/lib/auth/auth.service';
+import {AuthService, AuthenticationError} from '@/lib/auth/auth.service';
 import {CookieService} from '@/lib/auth/cookie.service';
-import {LoginSuccessResponse, LoginErrorResponse} from '@/types/auth';
 import {JwtService, JwtSecretError} from '@/lib/auth/jwt.service';
+import {LoginSuccessResponse, LoginErrorResponse} from '@/types/auth';
+import {Axios, AxiosError} from 'axios';
 
 export async function GET(
     request: NextRequest
 ): Promise<NextResponse<LoginSuccessResponse | LoginErrorResponse>> {
+    const accessToken = CookieService.getAccessToken(request);
+
+    if (!accessToken) {
+        return errorResponse('Not authenticated', 401);
+    }
+
+    // Верифицируем токен локально (без запроса к бэкенду)
     try {
-        // 1. Читаем accessToken из cookies
-        const accessToken = request.cookies.get('access_token')?.value;
+        const payload = JwtService.verify(accessToken);
 
-        if (!accessToken) {
-            return NextResponse.json<LoginErrorResponse>(
-                {success: false, data: 'Not authenticated'},
-                {status: 401}
-            );
+        if (!payload) {
+            return clearAndError('Token expired', 401);
         }
-
-        // 2. Проверяем токен (валидация + истечение срока)
-        const isValid = JwtService.verify(accessToken);
-
-        if (!isValid) {
-            return NextResponse.json<LoginErrorResponse>(
-                {success: false, data: 'Token expired'},
-                {status: 401}
-            );
+    } catch (error) {
+        if (error instanceof JwtSecretError) {
+            return errorResponse('Server configuration error', 503);
         }
+        return clearAndError('Invalid token', 401);
+    }
 
-        // 3. Извлекаем данные пользователя
-        const userData = AuthService.extractUserDataFromToken(accessToken);
+    // Проверяем актуальность сессии на бэкенде
+    try {
+        const userData = await AuthService.getMe(accessToken);
 
-        // 4. Возвращаем успешный ответ
-        return NextResponse.json<LoginSuccessResponse>({success: true, data: userData});
-    } catch (err) {
-        if (err instanceof JwtSecretError) {
-            console.error('JWT config error in /me:', err.message);
-            return NextResponse.json<LoginErrorResponse>(
-                {success: false, data: 'Server configuration error'},
-                {status: 503}
-            );
+        return NextResponse.json<LoginSuccessResponse>({
+            success: true,
+            data: userData
+        });
+    } catch (error) {
+        if (error instanceof AuthenticationError) {
+            if (error.statusCode === 401 || error.statusCode === 403) {
+                return clearAndError('Session expired or invalid', 401);
+            }
+
+            // 429 — бэкенд заблокировал, не чистим cookies
+            if (error.statusCode === 429) {
+                return errorResponse('Too many requests', 429);
+            }
+
+            // 5xx — бэкенд временно недоступен, не чистим cookies
+            return errorResponse('Failed to verify session', 503);
         }
-        console.error('Error in /me:', err);
-        return NextResponse.json<LoginErrorResponse>(
-            {success: false, data: 'Internal server error'},
-            {status: 500}
+        return errorResponse('Internal server error', 500);
+    }
+
+    function clearAndError(message: string, status: number): NextResponse<LoginErrorResponse> {
+        const response = NextResponse.json<LoginErrorResponse>(
+            {success: false, data: message},
+            {status}
         );
+        CookieService.clearAuthTokens(response);
+        return response;
+    }
+
+    function errorResponse(message: string, status: number): NextResponse<LoginErrorResponse> {
+        return NextResponse.json<LoginErrorResponse>({success: false, data: message}, {status});
     }
 }
