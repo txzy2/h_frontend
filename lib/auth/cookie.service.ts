@@ -2,38 +2,52 @@
 import {NextResponse} from 'next/server';
 import {AuthTokens} from '@/types/auth';
 
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+const COOKIE_OPTIONS = {
+    httpOnly: true,
+    secure: IS_PRODUCTION,
+    sameSite: 'lax' as const,
+    path: '/'
+};
+
+const TOKEN_MAX_AGE = {
+    ACCESS: 60 * 15, // 15 минут
+    REFRESH: 60 * 60 * 24 * 7 // 7 дней
+} as const;
+
+const COOKIE_NAMES = {
+    ACCESS: 'access_token',
+    REFRESH: 'refresh_token'
+} as const;
+
 export class CookieService {
-    private static readonly ACCESS_TOKEN_MAX_AGE = 60 * 15; // 15 минут
-    private static readonly REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 7; // 7 дней
+    static getAccessToken<
+        T extends {cookies: {get: (name: string) => {value: string} | undefined}}
+    >(request: T): string | undefined {
+        return request.cookies.get(COOKIE_NAMES.ACCESS)?.value;
+    }
 
-    /**
-     * Устанавливает токены в httpOnly cookies
-     */
+    static getRefreshToken<
+        T extends {cookies: {get: (name: string) => {value: string} | undefined}}
+    >(request: T): string | undefined {
+        return request.cookies.get(COOKIE_NAMES.REFRESH)?.value;
+    }
+
     static setAuthTokens(response: NextResponse, tokens: AuthTokens): void {
-        const isProduction = process.env.NODE_ENV === 'production';
-
-        response.cookies.set('access_token', tokens.accessToken, {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: 'lax',
-            maxAge: this.ACCESS_TOKEN_MAX_AGE,
-            path: '/'
+        response.cookies.set(COOKIE_NAMES.ACCESS, tokens.accessToken, {
+            ...COOKIE_OPTIONS,
+            maxAge: TOKEN_MAX_AGE.ACCESS
         });
 
-        response.cookies.set('refresh_token', tokens.refreshToken, {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: 'lax',
-            maxAge: this.REFRESH_TOKEN_MAX_AGE,
-            path: '/'
+        response.cookies.set(COOKIE_NAMES.REFRESH, tokens.refreshToken, {
+            ...COOKIE_OPTIONS,
+            maxAge: TOKEN_MAX_AGE.REFRESH
         });
     }
 
-    /**
-     * Удаляет токены из cookies
-     */
     static clearAuthTokens(response: NextResponse): void {
-        response.cookies.delete('access_token');
-        response.cookies.delete('refresh_token');
+        response.cookies.delete(COOKIE_NAMES.ACCESS);
+        response.cookies.delete(COOKIE_NAMES.REFRESH);
     }
 }
