@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DraftStatus {
+  IN_PROGRESS
+  ORG_CREATED_EXTERNALLY
+  COMPLETED
+  FAILED
+}
+
+model RegistrationDraft {
+  id          String      @id @default(uuid())
+  extUserId   String      @map("ext_user_id")
+  status      DraftStatus
+  currentStep Int         @default(1)
+  orgId       Int?        @map("org_id")
+  expiresAt   DateTime    @default(dbgenerated("NOW() + INTERVAL '7 days'")) @map("expires_at")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  organization DraftOrganization?
+  locations    DraftLocation[]
+
+  @@index([extUserId, status])
+  @@map("registration_draft")
+}
+
+model DraftOrganization {
+  id      String            @id @default(uuid())
+  draft   RegistrationDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  draftId String            @unique @map("draft_id")
+
+  name        String @db.VarChar(255)
+  inn         String @db.VarChar(12)
+  kpp         String @db.VarChar(9)
+  director    String @db.VarChar(255)
+  phoneNumber String @map("phone_number") @db.VarChar(11)
+  plan        String @db.VarChar(50)
+
+  @@map("draft_organization")
+}
+
+model DraftLocation {
+  id      String            @id @default(uuid())
+  draft   RegistrationDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  draftId String            @map("draft_id")
+
+  name         String  @db.VarChar(255)
+  address      String  @db.VarChar(255)
+  phone        String? @db.VarChar(11)
+  activePlaces Int     @map("active_places")
+
+  @@map("draft_location")
+}

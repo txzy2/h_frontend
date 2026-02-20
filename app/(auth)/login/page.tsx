@@ -164,6 +164,7 @@ export default function Login() {
                                 disabled={isLoading}
                                 value={form.login}
                                 onChange={handleChange}
+                                maxLength={20}
                                 className={[
                                     'border-zinc-700 bg-zinc-800/50 text-white placeholder:text-zinc-600',
                                     'focus-visible:border-amber-500/60 focus-visible:ring-0 focus-visible:ring-offset-0',
@@ -192,6 +193,7 @@ export default function Login() {
                                     disabled={isLoading}
                                     value={form.password}
                                     onChange={handleChange}
+                                    maxLength={32}
                                     className={[
                                         'border-zinc-700 bg-zinc-800/50 pr-10 text-white placeholder:text-zinc-600',
                                         'focus-visible:border-amber-500/60 focus-visible:ring-0 focus-visible:ring-offset-0',

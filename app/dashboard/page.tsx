@@ -9,6 +9,7 @@ import {useEffect} from 'react';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {CalendarDays, Users, TrendingUp, Clock} from 'lucide-react';
 import {isAllowed} from '@/lib/auth/roles';
+import {toast} from 'sonner';
 
 const STATS = [
     {icon: CalendarDays, label: 'Броней сегодня', value: '—', color: 'text-amber-400'},
@@ -37,6 +38,46 @@ export default function Dashboard() {
         if (user && !isAllowed(user.role)) {
             router.replace('/forbidden');
         }
+    }, [isLoading, user, router]);
+
+    useEffect(() => {
+        if (isLoading || !user) return;
+
+        const checkDraft = async () => {
+            try {
+                const {data} = await axios.get('/api/onboarding/draft');
+                if (!data.success) return;
+
+                const draft = data.data;
+                if (draft.status === 'COMPLETED') return;
+
+                const step = draft.currentStep;
+
+                if (step === 1 || !draft.organization) {
+                    toast('Организация не настроена', {
+                        description: 'Заполните данные организации чтобы начать работу',
+                        action: {
+                            label: 'Заполнить',
+                            onClick: () => router.push('/onboarding')
+                        },
+                        duration: Infinity // не скрывать пока не кликнут
+                    });
+                } else if (step === 2 || !draft.locations?.length) {
+                    toast('Осталось добавить точки', {
+                        description: 'Вы заполнили организацию — добавьте точки продаж',
+                        action: {
+                            label: 'Добавить точки',
+                            onClick: () => router.push('/onboarding')
+                        },
+                        duration: Infinity
+                    });
+                }
+            } catch {
+                // ignore
+            }
+        };
+
+        checkDraft();
     }, [isLoading, user, router]);
 
     if (isLoading || !user) {

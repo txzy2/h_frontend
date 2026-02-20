@@ -3,13 +3,7 @@
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from '@/components/ui/select';
+
 import {useAuthStore} from '@/stores/auth.store';
 import axios from 'axios';
 import {useRouter} from 'next/navigation';
@@ -25,7 +19,6 @@ interface FormState {
     email: string;
     password: string;
     confirm_password: string;
-    role: Role | '';
 }
 
 interface FormErrors {
@@ -60,8 +53,7 @@ export default function Register() {
         login: '',
         email: '',
         password: '',
-        confirm_password: '',
-        role: ''
+        confirm_password: ''
     });
     const [errors, setErrors] = useState<FormErrors>({});
     const [isLoading, setIsLoading] = useState(false);
@@ -74,9 +66,8 @@ export default function Register() {
     }, []);
 
     useEffect(() => {
-        if (mounted && user) {
-            router.replace('/dashboard');
-        }
+        if (!mounted || !user) return;
+        router.replace('/onboarding');
     }, [mounted, user, router]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,13 +96,11 @@ export default function Register() {
                 login: form.login,
                 email: form.email,
                 password: form.password,
-                confirm_password: form.confirm_password,
-                role: form.role
+                confirm_password: form.confirm_password
             });
 
             if (data.success) {
                 setUser(data.data);
-                router.replace('/dashboard');
             } else {
                 setErrors({
                     general: typeof data.data === 'string' ? data.data : 'Ошибка регистрации'
@@ -130,6 +119,15 @@ export default function Register() {
     };
 
     if (!mounted) return null;
+
+    // Если юзер уже авторизован — показываем спиннер пока редиректим
+    if (user) {
+        return (
+            <div className='flex min-h-screen items-center justify-center bg-[#0a0a0a]'>
+                <div className='h-6 w-6 animate-spin rounded-full border-2 border-amber-500 border-t-transparent' />
+            </div>
+        );
+    }
 
     const inputCls = (field: keyof FormErrors) =>
         [
@@ -182,23 +180,24 @@ export default function Register() {
                     )}
 
                     <form onSubmit={handleSubmit} noValidate className='space-y-5'>
-                        {/* Имя */}
+                        {/* ФИО */}
                         <div className='space-y-1.5'>
                             <Label
                                 htmlFor='name'
                                 className='text-xs font-medium uppercase tracking-wider text-zinc-400'
                             >
-                                Имя
+                                ФИО
                             </Label>
                             <Input
                                 id='name'
                                 name='name'
                                 type='text'
-                                placeholder='Введите имя'
+                                placeholder='Введите ФИО'
                                 autoComplete='name'
                                 autoFocus
                                 disabled={isLoading}
                                 value={form.name}
+                                maxLength={50}
                                 onChange={handleChange}
                                 className={inputCls('name')}
                             />
@@ -221,6 +220,7 @@ export default function Register() {
                                 autoComplete='username'
                                 disabled={isLoading}
                                 value={form.login}
+                                maxLength={20}
                                 onChange={handleChange}
                                 className={inputCls('login')}
                             />
@@ -243,6 +243,7 @@ export default function Register() {
                                 autoComplete='email'
                                 disabled={isLoading}
                                 value={form.email}
+                                maxLength={50}
                                 onChange={handleChange}
                                 className={inputCls('email')}
                             />
@@ -266,6 +267,7 @@ export default function Register() {
                                     autoComplete='new-password'
                                     disabled={isLoading}
                                     value={form.password}
+                                    maxLength={32}
                                     onChange={handleChange}
                                     className={inputCls('password') + ' pr-10'}
                                 />
@@ -301,6 +303,7 @@ export default function Register() {
                                     autoComplete='new-password'
                                     disabled={isLoading}
                                     value={form.confirm_password}
+                                    maxLength={32}
                                     onChange={handleChange}
                                     className={inputCls('confirm_password') + ' pr-10'}
                                 />
