@@ -92,12 +92,6 @@ export default function Settings() {
         }
     }, [user]);
 
-    useEffect(() => {
-        if (!isLoading && !user) {
-            router.replace('/login');
-        }
-    }, [isLoading, user, router]);
-
     const logout = async () => {
         try {
             await axios.post('/api/auth/logout');

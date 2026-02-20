@@ -8,6 +8,7 @@ import {useRouter} from 'next/navigation';
 import {useEffect} from 'react';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {CalendarDays, Users, TrendingUp, Clock} from 'lucide-react';
+import {isAllowed} from '@/lib/auth/roles';
 
 const STATS = [
     {icon: CalendarDays, label: 'Броней сегодня', value: '—', color: 'text-amber-400'},
@@ -31,10 +32,10 @@ export default function Dashboard() {
         }
     };
 
-    // Не авторизован — на лендинг
     useEffect(() => {
-        if (!isLoading && !user) {
-            router.replace('/');
+        if (isLoading) return;
+        if (user && !isAllowed(user.role)) {
+            router.replace('/forbidden');
         }
     }, [isLoading, user, router]);
 

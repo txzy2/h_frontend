@@ -93,7 +93,7 @@ export class AuthService {
                 throw new AuthenticationError('Refresh failed', 401);
             }
 
-            return normalizeTokens(data.data.tokens);
+            return normalizeTokens(data.data);
         } catch (error) {
             handleAxiosError(error, 'Refresh failed');
         }
