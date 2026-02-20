@@ -68,12 +68,10 @@ export interface AuthServerResponse {
     };
 }
 
-/** Ответ бэкенда на /auth/refresh */
+/** Ответ бэкенда на /auth/refresh (ApiResponse.ok<Tokens>) */
 export interface RefreshServerResponse {
     success: boolean;
-    data: {
-        tokens: RawAuthTokens;
-    };
+    data: RawAuthTokens;
 }
 
 // ============================================================
