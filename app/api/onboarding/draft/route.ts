@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
     try {
         const draft = await onboardingService.getOrCreateDraft(payload.sub);
         return NextResponse.json({success: true, data: draft});
-    } catch {
+    } catch (err) {
+        console.error(err);
         return errorResponse('Internal server error', 500);
     }
 }
