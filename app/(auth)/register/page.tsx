@@ -46,7 +46,7 @@ function validate(form: FormState): FormErrors {
 
 export default function Register() {
     const router = useRouter();
-    const {setUser, user} = useAuthStore();
+    const {user} = useAuthStore();
 
     const [form, setForm] = useState<FormState>({
         name: '',
@@ -100,7 +100,12 @@ export default function Register() {
             });
 
             if (data.success) {
-                setUser(data.data);
+                // Регистрация всегда требует подтверждения email
+                sessionStorage.setItem('reg_request_id', data.data.request_id);
+                sessionStorage.setItem('reg_email', form.email);
+                sessionStorage.setItem('reg_login', form.login);
+                sessionStorage.setItem('reg_password', form.password);
+                router.push('/register/confirm');
             } else {
                 setErrors({
                     general: typeof data.data === 'string' ? data.data : 'Ошибка регистрации'
@@ -139,6 +144,14 @@ export default function Register() {
 
     return (
         <div className='relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0a0a] p-4'>
+            {/* Полноэкранный лоадер при отправке */}
+            {isLoading && (
+                <div className='fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm'>
+                    <Loader2 size={32} className='animate-spin text-amber-400' />
+                    <p className='mt-4 text-sm text-zinc-300'>Отправляем код на почту...</p>
+                </div>
+            )}
+
             {/* Фоновые блюры */}
             <div className='pointer-events-none absolute inset-0 overflow-hidden'>
                 <div className='absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full bg-amber-900/15 blur-[100px]' />

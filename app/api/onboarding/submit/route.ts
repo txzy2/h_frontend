@@ -52,7 +52,8 @@ export async function POST(request: NextRequest) {
         if (axios.isAxiosError(error)) {
             console.log(error.response);
             const status = error.response?.status ?? 500;
-            const message = error.response?.data?.message ?? 'Ошибка запроса к сервису';
+            const message =
+                error.response?.data?.error ?? error.response?.data?.message ?? 'Ошибка запроса к сервису';
             return errorResponse(message, status);
         }
         return errorResponse('Internal server error', 500);

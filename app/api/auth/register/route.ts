@@ -1,9 +1,7 @@
 // app/api/auth/register/route.ts
 import {NextRequest, NextResponse} from 'next/server';
 import axios from 'axios';
-import {AuthService, AuthenticationError} from '@/lib/auth/auth.service';
-import {CookieService} from '@/lib/auth/cookie.service';
-import {LoginSuccessResponse, LoginErrorResponse} from '@/types/auth';
+import {LoginErrorResponse} from '@/types/auth';
 
 const AUTH_API_URL = process.env.AUTH_API_URL;
 
@@ -13,6 +11,15 @@ interface RegisterRequest {
     email: string;
     password: string;
     confirm_password: string;
+}
+
+interface AuthRegisterResponse {
+    success: boolean;
+    data: {
+        message: string;
+        request_id: string;
+        TTL: number;
+    };
 }
 
 function validateRegisterRequest(data: RegisterRequest): string | null {
@@ -42,17 +49,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
 
         // Запрос к внешнему auth-сервису
-        const {data} = await axios.post<{
-            success: boolean;
-            data: {userId: string; tokens: {access_token: string; refresh_token: string}};
-        }>(`${AUTH_API_URL}/auth/register`, {
-            name: body.name,
-            login: body.login,
-            email: body.email,
-            password: body.password,
-            confirm_password: body.confirm_password,
-            role: 'Admin'
-        });
+        const {data} = await axios.post<AuthRegisterResponse>(
+            `${AUTH_API_URL}/auth/register`,
+            {
+                name: body.name,
+                login: body.login,
+                email: body.email,
+                password: body.password,
+                confirm_password: body.confirm_password,
+                role: 'Admin'
+            }
+        );
 
         if (!data.success) {
             return NextResponse.json<LoginErrorResponse>(
@@ -61,21 +68,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             );
         }
 
-        const tokens = {
-            accessToken: data.data.tokens.access_token,
-            refreshToken: data.data.tokens.refresh_token
-        };
-
-        // Извлекаем данные пользователя из токена
-        const userData = AuthService.extractUserDataFromToken(tokens.accessToken);
-
-        const response = NextResponse.json<LoginSuccessResponse>({
+        // Регистрация всегда требует подтверждения email
+        // Возвращаем request_id и TTL на фронтенд
+        return NextResponse.json({
             success: true,
-            data: userData
+            data: {
+                request_id: data.data.request_id,
+                ttl: data.data.TTL
+            }
         });
-
-        CookieService.setAuthTokens(response, tokens);
-        return response;
     } catch (error) {
         if (axios.isAxiosError(error)) {
             const status = error.response?.status ?? 500;
@@ -84,13 +85,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 error.response?.data?.error ??
                 'Ошибка регистрации';
             return NextResponse.json<LoginErrorResponse>({success: false, data: message}, {status});
-        }
-
-        if (error instanceof AuthenticationError) {
-            return NextResponse.json<LoginErrorResponse>(
-                {success: false, data: error.message},
-                {status: error.statusCode}
-            );
         }
 
         return NextResponse.json<LoginErrorResponse>(

@@ -164,7 +164,7 @@ export default function Onboarding() {
                     }
                     if (currentStep >= 3 && data.data.locations?.length) {
                         setLocations(
-                            data.data.locations.map((l: any) => ({
+                            data.data.locations.map((l: {name: string; address: string; phone?: string; activePlaces: number}) => ({
                                 name: l.name,
                                 address: l.address,
                                 phone: l.phone ?? '',
@@ -312,6 +312,14 @@ export default function Onboarding() {
 
     return (
         <div className='relative flex min-h-screen flex-col overflow-hidden bg-[#0a0a0a]'>
+            {/* Полноэкранный лоадер при сабмите */}
+            {submitLoading && (
+                <div className='fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm'>
+                    <Loader2 size={32} className='animate-spin text-amber-400' />
+                    <p className='mt-4 text-sm text-zinc-300'>Регистрируем организацию...</p>
+                </div>
+            )}
+
             {/* Фоновые блюры */}
             <div className='pointer-events-none absolute inset-0 overflow-hidden'>
                 <div className='absolute -left-32 top-0 h-[500px] w-[500px] rounded-full bg-amber-900/10 blur-[120px]' />

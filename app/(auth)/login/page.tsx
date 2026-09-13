@@ -11,6 +11,7 @@ import {useEffect, useState} from 'react';
 import {Eye, EyeOff, Loader2} from 'lucide-react';
 import {UserData} from '@/types/auth/jwt.types';
 import {isAllowed} from '@/lib/auth/roles';
+import {ForgotPasswordModal} from '@/components/auth/forgot-password-modal';
 
 interface FormState {
     login: string;
@@ -40,6 +41,7 @@ export default function Login() {
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [showForgot, setShowForgot] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -63,8 +65,8 @@ export default function Login() {
         }
     };
 
-    const resetPassword = async () => {
-        //todo
+    const resetPassword = () => {
+        setShowForgot(true);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -126,10 +128,10 @@ export default function Login() {
             {/* Карточка */}
             <div className='relative w-full max-w-sm'>
                 {/* Лого */}
-                <div className='mb-8 text-center'>
+                <div className='mb-6 text-center'>
                     <Button
-                        variant={'link'}
-                        className='text-3xl font-bold tracking-tight text-white  m-0 p-0 transition-all hover:scale-105'
+                        variant='link'
+                        className='m-0 p-0 text-3xl font-bold tracking-tight text-white transition-all hover:scale-105'
                         onClick={() => router.push('/')}
                     >
                         HooBu
@@ -137,15 +139,15 @@ export default function Login() {
                     <p className='mt-1.5 text-sm text-zinc-500'>Войдите в панель управления</p>
                 </div>
 
-                <div className='rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 shadow-2xl backdrop-blur-sm'>
+                <div className='rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 shadow-2xl backdrop-blur-sm sm:p-8'>
                     {/* Общая ошибка */}
                     {errors.general && (
-                        <div className='mb-5 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400'>
+                        <div className='mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400'>
                             {errors.general}
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} noValidate className='space-y-5'>
+                    <form onSubmit={handleSubmit} noValidate className='space-y-4'>
                         {/* Логин */}
                         <div className='space-y-1.5'>
                             <Label
@@ -177,12 +179,22 @@ export default function Login() {
 
                         {/* Пароль */}
                         <div className='space-y-1.5'>
-                            <Label
-                                htmlFor='password'
-                                className='text-xs font-medium uppercase tracking-wider text-zinc-400'
-                            >
-                                Пароль
-                            </Label>
+                            <div className='flex items-center justify-between'>
+                                <Label
+                                    htmlFor='password'
+                                    className='text-xs font-medium uppercase tracking-wider text-zinc-400'
+                                >
+                                    Пароль
+                                </Label>
+                                <Button
+                                    variant='link'
+                                    className='h-auto p-0 text-[11px] text-zinc-600 hover:text-zinc-400'
+                                    type='button'
+                                    onClick={async () => await resetPassword()}
+                                >
+                                    Забыли пароль?
+                                </Button>
+                            </div>
                             <div className='relative'>
                                 <Input
                                     id='password'
@@ -214,16 +226,6 @@ export default function Login() {
                             {errors.password && (
                                 <p className='text-xs text-red-400'>{errors.password}</p>
                             )}
-                            <div className='flex justify-end'>
-                                <Button
-                                    variant={'link'}
-                                    className='text-[12px] p-0 m-0 text-zinc-600'
-                                    type='button'
-                                    onClick={async () => await resetPassword()}
-                                >
-                                    Забыли пароль?
-                                </Button>
-                            </div>
                         </div>
 
                         {/* Кнопка */}
@@ -244,16 +246,89 @@ export default function Login() {
                     </form>
                 </div>
 
-                {/* Ссылка назад */}
-                <p className='mt-6 text-center text-xs text-zinc-600'>
-                    <button
+                {/* Соцсети */}
+                <div className='mt-5'>
+                    <div className='relative mb-5'>
+                        <div className='absolute inset-0 flex items-center'>
+                            <div className='w-full border-t border-zinc-800' />
+                        </div>
+                        <div className='relative flex justify-center text-xs'>
+                            <span className='bg-[#0a0a0a] px-3 text-zinc-600'>или</span>
+                        </div>
+                    </div>
+
+                    <div className='grid grid-cols-2 gap-3'>
+                        <button
+                            type='button'
+                            disabled
+                            className='flex h-10 items-center justify-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/50 text-sm text-zinc-500 transition-colors hover:border-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed'
+                        >
+                            <YandexIcon />
+                            Яндекс
+                        </button>
+                        <button
+                            type='button'
+                            disabled
+                            className='flex h-10 items-center justify-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/50 text-sm text-zinc-500 transition-colors hover:border-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed'
+                        >
+                            <VkIcon />
+                            ВКонтакте
+                        </button>
+                    </div>
+                    <p className='mt-2 text-center text-[10px] text-zinc-700'>Скоро будет доступно</p>
+                </div>
+
+                {/* Ссылки */}
+                <div className='mt-6 flex flex-col items-center gap-2'>
+                    <p className='text-xs text-zinc-600'>
+                        Нет аккаунта?{' '}
+                        <Button
+                            variant='link'
+                            onClick={() => router.push('/register')}
+                            className='m-0 p-0 text-[12px] text-zinc-500 transition-colors hover:text-zinc-300'
+                        >
+                            Зарегистрироваться
+                        </Button>
+                    </p>
+                    <Button
+                        variant='link'
                         onClick={() => router.push('/')}
-                        className='transition-colors hover:text-zinc-400'
+                        className='m-0 p-0 text-[12px] text-zinc-600 transition-colors hover:text-zinc-400'
                     >
                         ← Вернуться на главную
-                    </button>
-                </p>
+                    </Button>
+                </div>
             </div>
+
+            <ForgotPasswordModal
+                open={showForgot}
+                onClose={() => setShowForgot(false)}
+                initialLogin={form.login}
+            />
         </div>
+    );
+}
+
+function YandexIcon() {
+    return (
+        <svg viewBox='0 0 24 24' fill='none' className='h-4 w-4'>
+            <rect width='24' height='24' rx='4' fill='#FC3F1D' />
+            <path
+                d='M13.5 7.5h-1.2c-1.6 0-2.3.7-2.3 1.8 0 1.2.7 1.8 2 2.6l.9.5-3 4.3H8.2l2.7-3.9c-1.2-.7-2.2-1.6-2.2-3.4 0-2 1.4-3.3 3.8-3.3h1.9v11.4h-1.4V7.5h.5z'
+                fill='white'
+            />
+        </svg>
+    );
+}
+
+function VkIcon() {
+    return (
+        <svg viewBox='0 0 24 24' fill='none' className='h-4 w-4'>
+            <rect width='24' height='24' rx='4' fill='#0077FF' />
+            <path
+                d='M12.8 16.2s.3 0 .5-.2c.2-.2.2-.5.2-.5s0-1.6.7-1.8c.7-.2 1.6 1.5 2.6 2.2.7.5 1.3.4 1.3.4l2.6-.4s1.4-.1.7-1c-.1-.1-.4-.8-1.8-2.2-1.5-1.5-1.3-1.2.5-3.7 1.1-1.5 1.6-2.5 1.4-2.9-.1-.4-.8-.3-.8-.3l-3 .2s-.2 0-.4.1c-.2.1-.3.3-.3.3s-.5 1.3-1.1 2.4c-1.4 2.4-1.9 2.5-2.1 2.4-.5-.3-.4-1.3-.4-2 0-2.2.3-3.1-.6-3.4-.3-.1-.5-.2-1.3-.2-1 0-1.8 0-2.3.3-.3.2-.5.5-.4.5.2 0 .6.1.8.5.3.5.3 1.6.3 1.6s.2 2.7-.4 3c-.4.2-1-.2-2.3-2.2-.7-1.1-1.2-2.3-1.2-2.3s-.1-.2-.3-.4c-.2-.1-.5-.2-.5-.2l-2.8.2s-.4 0-.6.2c-.1.2 0 .5 0 .5s2.2 5 4.6 7.6c2.2 2.3 4.7 2.2 4.7 2.2l1.5-.2z'
+                fill='white'
+            />
+        </svg>
     );
 }

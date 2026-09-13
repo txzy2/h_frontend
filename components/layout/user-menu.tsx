@@ -1,6 +1,5 @@
 'use client';
 
-import Settings from '@/app/dashboard/settings/page';
 import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
 import {
     DropdownMenu,
@@ -12,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {useAuthStore} from '@/stores/auth.store';
 import {UserData} from '@/types/auth/jwt.types';
-import {LogOut, Mail, Shield, User} from 'lucide-react';
+import {LogOut, Mail, Shield, User, ChevronDown} from 'lucide-react';
 import {useRouter} from 'next/navigation';
 
 interface UserMenuProps {
@@ -42,7 +41,7 @@ export function UserMenu({user, onLogout}: UserMenuProps) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <button className='flex items-center gap-2.5 rounded-full px-2 py-1.5 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'>
+                <button className='flex items-center gap-2 rounded-full px-2 py-1.5 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'>
                     <Avatar className='h-8 w-8'>
                         <AvatarImage src={getAvatarUrl(user.name)} alt={user.name} />
                         <AvatarFallback className='text-xs'>
@@ -50,6 +49,7 @@ export function UserMenu({user, onLogout}: UserMenuProps) {
                         </AvatarFallback>
                     </Avatar>
                     <span className='text-sm font-medium'>{user.login}</span>
+                    <ChevronDown size={14} className='text-zinc-500' />
                 </button>
             </DropdownMenuTrigger>
 
