@@ -247,6 +247,7 @@ export default function Onboarding() {
 
         setLocLoading(true);
         setLocErrors({});
+        setSubmitError('');
 
         try {
             // Сохраняем точки
@@ -303,7 +304,7 @@ export default function Onboarding() {
                             <CheckCircle2 size={32} className='text-amber-400' />
                         </div>
                     </div>
-                    <h2 className='text-xl font-bold text-white'>Организация зарегистрирована!</h2>
+                    <h2 className='text-xl font-bold text-white'>Организация настроена!</h2>
                     <p className='mt-2 text-sm text-zinc-500'>Переходим в панель управления...</p>
                 </div>
             </div>
@@ -316,7 +317,7 @@ export default function Onboarding() {
             {submitLoading && (
                 <div className='fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm'>
                     <Loader2 size={32} className='animate-spin text-amber-400' />
-                    <p className='mt-4 text-sm text-zinc-300'>Регистрируем организацию...</p>
+                    <p className='mt-4 text-sm text-zinc-300'>Сохраняем организацию и точки...</p>
                 </div>
             )}
 
