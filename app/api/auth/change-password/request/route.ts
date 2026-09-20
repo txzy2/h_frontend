@@ -1,32 +1,43 @@
 // app/api/auth/change-password/request/route.ts
-import {NextRequest, NextResponse} from 'next/server';
+import {NextRequest} from 'next/server';
 import axios from 'axios';
-import {CookieService} from '@/lib/auth/cookie.service';
+import {
+    resolveSession,
+    sessionFailureResponse,
+    sessionResponder,
+    sessionRevokedResponse
+} from '@/lib/auth/session.service';
 
 const AUTH_API_URL = process.env.AUTH_API_URL;
 
 export async function POST(request: NextRequest) {
-    const accessToken = CookieService.getAccessToken(request);
+    const session = await resolveSession(request);
+    if (!session.ok) return sessionFailureResponse(session);
 
-    if (!accessToken) {
-        return NextResponse.json({success: false, data: 'Not authenticated'}, {status: 401});
-    }
+    const respond = sessionResponder(session);
 
     try {
         const body = await request.json();
 
         const {data} = await axios.post(`${AUTH_API_URL}/auth/change-password/request`, body, {
-            headers: {Authorization: `Bearer ${accessToken}`}
+            headers: {Authorization: `Bearer ${session.accessToken}`}
         });
 
-        return NextResponse.json(data);
+        return respond(data);
     } catch (error) {
         if (axios.isAxiosError(error)) {
-            return NextResponse.json(
-                error.response?.data ?? {success: false, data: 'Request failed'},
-                {status: error.response?.status ?? 500}
-            );
+            const status = error.response?.status ?? 500;
+
+            // access-токен был свежим, но auth-сервис его отверг — сессия недействительна
+            if (status === 401 || status === 403) {
+                return sessionRevokedResponse(
+                    error.response?.data ?? {success: false, data: 'Unauthorized'},
+                    status
+                );
+            }
+
+            return respond(error.response?.data ?? {success: false, data: 'Request failed'}, status);
         }
-        return NextResponse.json({success: false, data: 'Internal server error'}, {status: 500});
+        return respond({success: false, data: 'Internal server error'}, 500);
     }
 }

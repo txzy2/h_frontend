@@ -119,11 +119,11 @@ export default function VerifyPasswordChange() {
     // Экран успеха
     if (success) {
         return (
-            <div className='flex min-h-screen items-center justify-center bg-[#0a0a0a]'>
+            <div className='flex min-h-screen items-center justify-center bg-app'>
                 <div className='text-center'>
-                    <CheckCircle2 size={48} className='mx-auto mb-4 text-amber-400' />
-                    <h2 className='text-xl font-semibold text-white'>Пароль изменён</h2>
-                    <p className='mt-2 text-sm text-zinc-500'>
+                    <CheckCircle2 size={48} className='mx-auto mb-4 text-brand' />
+                    <h2 className='text-xl font-semibold text-app-fg'>Пароль изменён</h2>
+                    <p className='mt-2 text-sm text-app-subtle'>
                         Все сессии завершены. Перенаправление...
                     </p>
                 </div>
@@ -132,24 +132,24 @@ export default function VerifyPasswordChange() {
     }
 
     return (
-        <div className='relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0a0a] p-4'>
+        <div className='relative flex min-h-screen items-center justify-center overflow-hidden bg-app p-4'>
             {/* Фоновые блюры */}
             <div className='pointer-events-none absolute inset-0 overflow-hidden'>
-                <div className='absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full bg-amber-900/10 blur-[100px]' />
-                <div className='absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full bg-orange-900/8 blur-[100px]' />
+                <div className='absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full bg-brand/10 blur-[100px]' />
+                <div className='absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full bg-brand/8 blur-[100px]' />
             </div>
 
             <div className='relative w-full max-w-sm'>
                 {/* Лого */}
                 <div className='mb-8 text-center'>
-                    <span className='text-3xl font-bold tracking-tight text-white'>HooBu</span>
-                    <p className='mt-1.5 text-sm text-zinc-500'>Подтверждение смены пароля</p>
+                    <span className='text-3xl font-bold tracking-tight text-app-fg'>HooBu</span>
+                    <p className='mt-1.5 text-sm text-app-subtle'>Подтверждение смены пароля</p>
                 </div>
 
-                <div className='rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 shadow-2xl backdrop-blur-sm'>
+                <div className='rounded-2xl border border-app-border bg-surface/60 p-8 shadow-2xl backdrop-blur-sm'>
                     <div className='mb-6 text-center'>
-                        <h2 className='text-lg font-semibold text-white'>Введите код</h2>
-                        <p className='mt-1.5 text-sm text-zinc-500'>
+                        <h2 className='text-lg font-semibold text-app-fg'>Введите код</h2>
+                        <p className='mt-1.5 text-sm text-app-subtle'>
                             6-значный код отправлен на вашу почту
                         </p>
                     </div>
@@ -170,12 +170,12 @@ export default function VerifyPasswordChange() {
                                 onKeyDown={e => handleKeyDown(i, e)}
                                 disabled={isSubmitting}
                                 className={[
-                                    'h-12 w-10 rounded-lg border text-center text-lg font-bold text-white',
-                                    'bg-zinc-800/50 outline-none transition-colors',
+                                    'h-12 w-10 rounded-lg border text-center text-lg font-bold text-app-fg',
+                                    'bg-surface-2/50 outline-none transition-colors',
                                     'disabled:opacity-40',
                                     digit
-                                        ? 'border-amber-500/60'
-                                        : 'border-zinc-700 focus:border-amber-500/40',
+                                        ? 'border-brand/60'
+                                        : 'border-app-border focus:border-brand/40',
                                     error ? 'border-red-500/60' : ''
                                 ].join(' ')}
                             />
@@ -188,7 +188,7 @@ export default function VerifyPasswordChange() {
                     {/* Лоадер */}
                     {isSubmitting && (
                         <div className='mt-4 flex justify-center'>
-                            <Loader2 size={18} className='animate-spin text-amber-400' />
+                            <Loader2 size={18} className='animate-spin text-brand' />
                         </div>
                     )}
 
@@ -196,14 +196,14 @@ export default function VerifyPasswordChange() {
                     <Button
                         onClick={() => submitCode(code.join(''))}
                         disabled={code.some(c => !c) || isSubmitting}
-                        className='mt-6 w-full bg-amber-500 font-semibold text-black hover:bg-amber-400 disabled:opacity-40'
+                        className='mt-6 w-full bg-brand font-semibold text-brand-fg hover:bg-brand/90 disabled:opacity-40'
                     >
                         Подтвердить
                     </Button>
 
                     <button
                         onClick={() => router.push('/dashboard/settings')}
-                        className='mt-4 w-full text-center text-xs text-zinc-600 transition-colors hover:text-zinc-400'
+                        className='mt-4 w-full text-center text-xs text-app-subtle transition-colors hover:text-app-muted'
                     >
                         ← Вернуться назад
                     </button>

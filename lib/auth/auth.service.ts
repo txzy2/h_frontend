@@ -93,7 +93,7 @@ export class AuthService {
                 throw new AuthenticationError('Refresh failed', 401);
             }
 
-            return normalizeTokens(data.data.tokens);
+            return normalizeTokens(data.data);
         } catch (error) {
             handleAxiosError(error, 'Refresh failed');
         }
@@ -116,26 +116,31 @@ export class AuthService {
      * Получение данных текущего пользователя с бэкенда
      */
     static async getMe(accessToken: string): Promise<UserData> {
-        const {data} = await axios.get<{success: boolean; data: Record<string, unknown>}>(
-            `${AUTH_API_URL}/user/me`,
-            {headers: {Authorization: `Bearer ${accessToken}`}}
-        );
+        try {
+            const {data} = await axios.get<{success: boolean; data: Record<string, unknown>}>(
+                `${AUTH_API_URL}/user/me`,
+                {headers: {Authorization: `Bearer ${accessToken}`}}
+            );
 
-        if (!data.success) {
-            throw new AuthenticationError('Session not found', 401);
+            if (!data.success) {
+                throw new AuthenticationError('Session not found', 401);
+            }
+
+            const raw = data.data;
+
+            // Бэкенд может вернуть sub вместо userId
+            return {
+                userId: (raw.userId ?? raw.sub) as string,
+                email: raw.email as string,
+                login: raw.login as string,
+                name: raw.name as string,
+                role: raw.role as string,
+                active: raw.active as string
+            };
+        } catch (error) {
+            // 401 от auth-сервиса = сессия недействительна, а не 500
+            handleAxiosError(error, 'Failed to fetch user');
         }
-
-        const raw = data.data;
-
-        // Бэкенд может вернуть sub вместо userId
-        return {
-            userId: (raw.userId ?? raw.sub) as string,
-            email: raw.email as string,
-            login: raw.login as string,
-            name: raw.name as string,
-            role: raw.role as string,
-            active: raw.active as string
-        };
     }
 
     /**

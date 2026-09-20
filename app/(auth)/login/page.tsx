@@ -3,12 +3,16 @@
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
+import {useSession} from '@/hooks/useSession';
 import {useAuthStore} from '@/stores/auth.store';
 import {LoginSuccessResponse, LoginErrorResponse} from '@/types/auth';
 import axios from 'axios';
 import {useRouter} from 'next/navigation';
 import {useEffect, useState} from 'react';
 import {Eye, EyeOff, Loader2} from 'lucide-react';
+import {UserData} from '@/types/auth/jwt.types';
+import {isAllowed} from '@/lib/auth/roles';
+import {ForgotPasswordModal} from '@/components/auth/forgot-password-modal';
 
 interface FormState {
     login: string;
@@ -31,21 +35,27 @@ function validate(form: FormState): FormErrors {
 
 export default function Login() {
     const router = useRouter();
-    const {setUser, user} = useAuthStore();
+    const {user} = useAuthStore();
+    const {startSession} = useSession();
 
     const [form, setForm] = useState<FormState>({login: '', password: ''});
     const [errors, setErrors] = useState<FormErrors>({});
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [showForgot, setShowForgot] = useState(false);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
     useEffect(() => {
-        if (mounted && user) {
+        if (!mounted || !user) return;
+
+        if (isAllowed(user.role)) {
             router.replace('/dashboard');
+        } else {
+            router.replace('/forbidden');
         }
     }, [mounted, user, router]);
 
@@ -55,6 +65,10 @@ export default function Login() {
         if (errors[name as keyof FormErrors]) {
             setErrors(prev => ({...prev, [name]: undefined}));
         }
+    };
+
+    const resetPassword = () => {
+        setShowForgot(true);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -76,8 +90,8 @@ export default function Login() {
             );
 
             if (data.success) {
-                setUser(data.data as LoginSuccessResponse['data']);
-                router.replace('/dashboard');
+                const userData = data.data as UserData;
+                startSession(userData, data.expiresAt);
             } else {
                 setErrors({general: typeof data.data === 'string' ? data.data : 'Ошибка входа'});
             }
@@ -96,11 +110,11 @@ export default function Login() {
     if (!mounted) return null;
 
     return (
-        <div className='relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0a0a] p-4'>
+        <div className='relative flex min-h-screen items-center justify-center overflow-hidden bg-app p-4'>
             {/* Фоновые блюры */}
             <div className='pointer-events-none absolute inset-0 overflow-hidden'>
-                <div className='absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full bg-amber-900/15 blur-[100px]' />
-                <div className='absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full bg-orange-900/10 blur-[100px]' />
+                <div className='absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full bg-brand/15 blur-[100px]' />
+                <div className='absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full bg-brand/10 blur-[100px]' />
             </div>
 
             {/* Декоративная сетка */}
@@ -116,25 +130,31 @@ export default function Login() {
             {/* Карточка */}
             <div className='relative w-full max-w-sm'>
                 {/* Лого */}
-                <div className='mb-8 text-center'>
-                    <span className='text-3xl font-bold tracking-tight text-white'>HooBu</span>
-                    <p className='mt-1.5 text-sm text-zinc-500'>Войдите в панель управления</p>
+                <div className='mb-6 text-center'>
+                    <Button
+                        variant='link'
+                        className='m-0 p-0 text-3xl font-bold tracking-tight text-app-fg transition-all hover:scale-105'
+                        onClick={() => router.push('/')}
+                    >
+                        HooBu
+                    </Button>
+                    <p className='mt-1.5 text-sm text-app-subtle'>Войдите в панель управления</p>
                 </div>
 
-                <div className='rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 shadow-2xl backdrop-blur-sm'>
+                <div className='rounded-2xl border border-app-border bg-surface/60 p-6 shadow-2xl backdrop-blur-sm sm:p-8'>
                     {/* Общая ошибка */}
                     {errors.general && (
-                        <div className='mb-5 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400'>
+                        <div className='mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400'>
                             {errors.general}
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} noValidate className='space-y-5'>
+                    <form onSubmit={handleSubmit} noValidate className='space-y-4'>
                         {/* Логин */}
                         <div className='space-y-1.5'>
                             <Label
                                 htmlFor='login'
-                                className='text-xs font-medium uppercase tracking-wider text-zinc-400'
+                                className='text-xs font-medium uppercase tracking-wider text-app-muted'
                             >
                                 Логин
                             </Label>
@@ -148,9 +168,10 @@ export default function Login() {
                                 disabled={isLoading}
                                 value={form.login}
                                 onChange={handleChange}
+                                maxLength={20}
                                 className={[
-                                    'border-zinc-700 bg-zinc-800/50 text-white placeholder:text-zinc-600',
-                                    'focus-visible:border-amber-500/60 focus-visible:ring-0 focus-visible:ring-offset-0',
+                                    'border-app-border bg-surface-2/50 text-app-fg placeholder:text-app-subtle',
+                                    'focus-visible:border-brand/60 focus-visible:ring-0 focus-visible:ring-offset-0',
                                     'disabled:opacity-40',
                                     errors.login ? 'border-red-500/60' : ''
                                 ].join(' ')}
@@ -160,12 +181,22 @@ export default function Login() {
 
                         {/* Пароль */}
                         <div className='space-y-1.5'>
-                            <Label
-                                htmlFor='password'
-                                className='text-xs font-medium uppercase tracking-wider text-zinc-400'
-                            >
-                                Пароль
-                            </Label>
+                            <div className='flex items-center justify-between'>
+                                <Label
+                                    htmlFor='password'
+                                    className='text-xs font-medium uppercase tracking-wider text-app-muted'
+                                >
+                                    Пароль
+                                </Label>
+                                <Button
+                                    variant='link'
+                                    className='h-auto p-0 text-[11px] text-app-subtle hover:text-app-muted'
+                                    type='button'
+                                    onClick={async () => await resetPassword()}
+                                >
+                                    Забыли пароль?
+                                </Button>
+                            </div>
                             <div className='relative'>
                                 <Input
                                     id='password'
@@ -176,9 +207,10 @@ export default function Login() {
                                     disabled={isLoading}
                                     value={form.password}
                                     onChange={handleChange}
+                                    maxLength={32}
                                     className={[
-                                        'border-zinc-700 bg-zinc-800/50 pr-10 text-white placeholder:text-zinc-600',
-                                        'focus-visible:border-amber-500/60 focus-visible:ring-0 focus-visible:ring-offset-0',
+                                        'border-app-border bg-surface-2/50 pr-10 text-app-fg placeholder:text-app-subtle',
+                                        'focus-visible:border-brand/60 focus-visible:ring-0 focus-visible:ring-offset-0',
                                         'disabled:opacity-40',
                                         errors.password ? 'border-red-500/60' : ''
                                     ].join(' ')}
@@ -186,7 +218,7 @@ export default function Login() {
                                 <button
                                     type='button'
                                     onClick={() => setShowPassword(prev => !prev)}
-                                    className='absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 transition-colors hover:text-zinc-300'
+                                    className='absolute right-3 top-1/2 -translate-y-1/2 text-app-subtle transition-colors hover:text-app-fg/80'
                                     tabIndex={-1}
                                     aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
                                 >
@@ -202,7 +234,7 @@ export default function Login() {
                         <Button
                             type='submit'
                             disabled={isLoading}
-                            className='mt-2 w-full bg-amber-500 font-semibold text-black hover:bg-amber-400 disabled:opacity-40'
+                            className='w-full bg-brand font-semibold text-brand-fg hover:bg-brand/90 disabled:opacity-40'
                         >
                             {isLoading ? (
                                 <>
@@ -216,16 +248,89 @@ export default function Login() {
                     </form>
                 </div>
 
-                {/* Ссылка назад */}
-                <p className='mt-6 text-center text-xs text-zinc-600'>
-                    <button
+                {/* Соцсети */}
+                <div className='mt-5'>
+                    <div className='relative mb-5'>
+                        <div className='absolute inset-0 flex items-center'>
+                            <div className='w-full border-t border-app-border' />
+                        </div>
+                        <div className='relative flex justify-center text-xs'>
+                            <span className='bg-app px-3 text-app-subtle'>или</span>
+                        </div>
+                    </div>
+
+                    <div className='grid grid-cols-2 gap-3'>
+                        <button
+                            type='button'
+                            disabled
+                            className='flex h-10 items-center justify-center gap-2 rounded-lg border border-app-border bg-surface/50 text-sm text-app-subtle transition-colors hover:border-app-border hover:text-app-fg/80 disabled:opacity-50 disabled:cursor-not-allowed'
+                        >
+                            <YandexIcon />
+                            Яндекс
+                        </button>
+                        <button
+                            type='button'
+                            disabled
+                            className='flex h-10 items-center justify-center gap-2 rounded-lg border border-app-border bg-surface/50 text-sm text-app-subtle transition-colors hover:border-app-border hover:text-app-fg/80 disabled:opacity-50 disabled:cursor-not-allowed'
+                        >
+                            <VkIcon />
+                            ВКонтакте
+                        </button>
+                    </div>
+                    <p className='mt-2 text-center text-[10px] text-app-subtle/70'>Скоро будет доступно</p>
+                </div>
+
+                {/* Ссылки */}
+                <div className='mt-6 flex flex-col items-center gap-2'>
+                    <p className='text-xs text-app-subtle'>
+                        Нет аккаунта?{' '}
+                        <Button
+                            variant='link'
+                            onClick={() => router.push('/register')}
+                            className='m-0 p-0 text-[12px] text-app-subtle transition-colors hover:text-app-fg/80'
+                        >
+                            Зарегистрироваться
+                        </Button>
+                    </p>
+                    <Button
+                        variant='link'
                         onClick={() => router.push('/')}
-                        className='transition-colors hover:text-zinc-400'
+                        className='m-0 p-0 text-[12px] text-app-subtle transition-colors hover:text-app-muted'
                     >
                         ← Вернуться на главную
-                    </button>
-                </p>
+                    </Button>
+                </div>
             </div>
+
+            <ForgotPasswordModal
+                open={showForgot}
+                onClose={() => setShowForgot(false)}
+                initialLogin={form.login}
+            />
         </div>
+    );
+}
+
+function YandexIcon() {
+    return (
+        <svg viewBox='0 0 24 24' fill='none' className='h-4 w-4'>
+            <rect width='24' height='24' rx='4' fill='#FC3F1D' />
+            <path
+                d='M13.5 7.5h-1.2c-1.6 0-2.3.7-2.3 1.8 0 1.2.7 1.8 2 2.6l.9.5-3 4.3H8.2l2.7-3.9c-1.2-.7-2.2-1.6-2.2-3.4 0-2 1.4-3.3 3.8-3.3h1.9v11.4h-1.4V7.5h.5z'
+                fill='white'
+            />
+        </svg>
+    );
+}
+
+function VkIcon() {
+    return (
+        <svg viewBox='0 0 24 24' fill='none' className='h-4 w-4'>
+            <rect width='24' height='24' rx='4' fill='#0077FF' />
+            <path
+                d='M12.8 16.2s.3 0 .5-.2c.2-.2.2-.5.2-.5s0-1.6.7-1.8c.7-.2 1.6 1.5 2.6 2.2.7.5 1.3.4 1.3.4l2.6-.4s1.4-.1.7-1c-.1-.1-.4-.8-1.8-2.2-1.5-1.5-1.3-1.2.5-3.7 1.1-1.5 1.6-2.5 1.4-2.9-.1-.4-.8-.3-.8-.3l-3 .2s-.2 0-.4.1c-.2.1-.3.3-.3.3s-.5 1.3-1.1 2.4c-1.4 2.4-1.9 2.5-2.1 2.4-.5-.3-.4-1.3-.4-2 0-2.2.3-3.1-.6-3.4-.3-.1-.5-.2-1.3-.2-1 0-1.8 0-2.3.3-.3.2-.5.5-.4.5.2 0 .6.1.8.5.3.5.3 1.6.3 1.6s.2 2.7-.4 3c-.4.2-1-.2-2.3-2.2-.7-1.1-1.2-2.3-1.2-2.3s-.1-.2-.3-.4c-.2-.1-.5-.2-.5-.2l-2.8.2s-.4 0-.6.2c-.1.2 0 .5 0 .5s2.2 5 4.6 7.6c2.2 2.3 4.7 2.2 4.7 2.2l1.5-.2z'
+                fill='white'
+            />
+        </svg>
     );
 }

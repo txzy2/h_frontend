@@ -68,12 +68,10 @@ export interface AuthServerResponse {
     };
 }
 
-/** Ответ бэкенда на /auth/refresh */
+/** Ответ бэкенда на /auth/refresh (ApiResponse.ok<Tokens>) */
 export interface RefreshServerResponse {
     success: boolean;
-    data: {
-        tokens: RawAuthTokens;
-    };
+    data: RawAuthTokens;
 }
 
 // ============================================================
@@ -96,9 +94,34 @@ export type UserPermissionsResult = UserPermission;
 // Типизированные ответы Next.js route handlers
 // ============================================================
 
-export type LoginSuccessResponse = ApiResponse<UserData>;
-export type LoginErrorResponse = ApiResponse<string>;
+export type LoginSuccessResponse = {
+    success: true;
+    data: UserData;
+    /** Unix time (секунды), когда истекает access-токен */
+    expiresAt: number;
+};
+export type LoginErrorResponse = {
+    success: false;
+    data: string;
+};
 export type LoginResponse = LoginSuccessResponse | LoginErrorResponse;
 
 export type LogoutResponse = ApiResponse<string>;
-export type RefreshResponse = ApiResponse<string>;
+
+/** GET /api/auth/me — текущая сессия */
+export type SessionSuccessResponse = LoginSuccessResponse;
+export type SessionErrorResponse = LoginErrorResponse;
+export type SessionResponse = SessionSuccessResponse | SessionErrorResponse;
+
+/** POST /api/auth/refresh */
+export type RefreshSuccessResponse = {
+    success: true;
+    data: string;
+    /** Unix time (секунды), когда истекает новый access-токен */
+    expiresAt: number;
+};
+export type RefreshErrorResponse = {
+    success: false;
+    data: string;
+};
+export type RefreshResponse = RefreshSuccessResponse | RefreshErrorResponse;
