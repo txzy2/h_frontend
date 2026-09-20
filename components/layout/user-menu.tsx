@@ -49,7 +49,7 @@ export function UserMenu({user, onLogout}: UserMenuProps) {
                         </AvatarFallback>
                     </Avatar>
                     <span className='text-sm font-medium'>{user.login}</span>
-                    <ChevronDown size={14} className='text-zinc-500' />
+                    <ChevronDown size={14} className='text-app-subtle' />
                 </button>
             </DropdownMenuTrigger>
 

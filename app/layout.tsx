@@ -1,4 +1,6 @@
 import {ThemeProvider} from '@/components/theme-provider';
+import {SessionProvider} from '@/components/providers/session-provider';
+import {BrandingProvider} from '@/components/providers/branding-provider';
 import type {Metadata} from 'next';
 import {Geist, Geist_Mono} from 'next/font/google';
 import './globals.css';
@@ -27,7 +29,11 @@ export default function RootLayout({
     return (
         <html lang='en' suppressHydrationWarning>
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-                <ThemeProvider>{children}</ThemeProvider>
+                <ThemeProvider>
+                    <SessionProvider>
+                        <BrandingProvider>{children}</BrandingProvider>
+                    </SessionProvider>
+                </ThemeProvider>
                 <Toaster theme='dark' />
             </body>
         </html>

@@ -1,7 +1,10 @@
 // app/api/onboarding/organization/route.ts
-import {NextRequest, NextResponse} from 'next/server';
-import {CookieService} from '@/lib/auth/cookie.service';
-import {JwtService} from '@/lib/auth/jwt.service';
+import {NextRequest} from 'next/server';
+import {
+    resolveSession,
+    sessionFailureResponse,
+    sessionResponder
+} from '@/lib/auth/session.service';
 
 import {db} from '@/lib/db-client';
 import {OnboardingService} from '@/lib/services/onboarding.service';
@@ -31,20 +34,17 @@ function validateOrg(body: OrgBody): string | null {
     return null;
 }
 
-// app/api/onboarding/organization/route.ts
 export async function POST(request: NextRequest) {
-    const accessToken = CookieService.getAccessToken(request);
-    if (!accessToken) return errorResponse('Not authenticated', 401);
+    const session = await resolveSession(request);
+    if (!session.ok) return sessionFailureResponse(session);
 
-    const payload = JwtService.verify(accessToken);
-    if (!payload) return errorResponse('Token expired', 401);
+    const respond = sessionResponder(session);
 
     try {
         const body: OrgBody = await request.json();
-        console.log('organization body:', body); // ← добавь это
 
         const validationError = validateOrg(body);
-        if (validationError) return errorResponse(validationError, 400);
+        if (validationError) return respond({success: false, data: validationError}, 400);
 
         await onboardingService.saveOrganization(body.draftId, {
             name: body.name,
@@ -55,12 +55,9 @@ export async function POST(request: NextRequest) {
             plan: body.plan
         });
 
-        return NextResponse.json({success: true, data: 'Организация сохранена'});
+        return respond({success: true, data: 'Организация сохранена'});
     } catch (e) {
-        console.error('organization error:', e); // ← и это
-        return errorResponse('Internal server error', 500);
+        console.error('organization error:', e);
+        return respond({success: false, data: 'Internal server error'}, 500);
     }
-}
-function errorResponse(message: string, status: number) {
-    return NextResponse.json({success: false, data: message}, {status});
 }

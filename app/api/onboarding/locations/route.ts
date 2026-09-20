@@ -1,7 +1,10 @@
 // app/api/onboarding/locations/route.ts
-import {NextRequest, NextResponse} from 'next/server';
-import {CookieService} from '@/lib/auth/cookie.service';
-import {JwtService} from '@/lib/auth/jwt.service';
+import {NextRequest} from 'next/server';
+import {
+    resolveSession,
+    sessionFailureResponse,
+    sessionResponder
+} from '@/lib/auth/session.service';
 
 import {db} from '@/lib/db-client';
 import {OnboardingService} from '@/lib/services/onboarding.service';
@@ -33,26 +36,21 @@ function validateLocations(body: LocationsBody): string | null {
 }
 
 export async function POST(request: NextRequest) {
-    const accessToken = CookieService.getAccessToken(request);
-    if (!accessToken) return errorResponse('Not authenticated', 401);
+    const session = await resolveSession(request);
+    if (!session.ok) return sessionFailureResponse(session);
 
-    const payload = JwtService.verify(accessToken);
-    if (!payload) return errorResponse('Token expired', 401);
+    const respond = sessionResponder(session);
 
     try {
         const body: LocationsBody = await request.json();
 
         const validationError = validateLocations(body);
-        if (validationError) return errorResponse(validationError, 400);
+        if (validationError) return respond({success: false, data: validationError}, 400);
 
         await onboardingService.saveLocations(body.draftId, body.locations);
 
-        return NextResponse.json({success: true, data: 'Точки сохранены'});
+        return respond({success: true, data: 'Точки сохранены'});
     } catch {
-        return errorResponse('Internal server error', 500);
+        return respond({success: false, data: 'Internal server error'}, 500);
     }
-}
-
-function errorResponse(message: string, status: number) {
-    return NextResponse.json({success: false, data: message}, {status});
 }

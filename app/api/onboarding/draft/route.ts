@@ -1,28 +1,26 @@
 // app/api/onboarding/draft/route.ts
-import {NextRequest, NextResponse} from 'next/server';
-import {CookieService} from '@/lib/auth/cookie.service';
-import {JwtService} from '@/lib/auth/jwt.service';
+import {NextRequest} from 'next/server';
+import {
+    resolveSession,
+    sessionFailureResponse,
+    sessionResponder
+} from '@/lib/auth/session.service';
 import {OnboardingService} from '@/lib/services/onboarding.service';
 import {db} from '@/lib/db-client';
 
 const onboardingService = new OnboardingService(db);
 
 export async function GET(request: NextRequest) {
-    const accessToken = CookieService.getAccessToken(request);
-    if (!accessToken) return errorResponse('Not authenticated', 401);
+    const session = await resolveSession(request);
+    if (!session.ok) return sessionFailureResponse(session);
 
-    const payload = JwtService.verify(accessToken);
-    if (!payload) return errorResponse('Token expired', 401);
+    const respond = sessionResponder(session);
 
     try {
-        const draft = await onboardingService.getOrCreateDraft(payload.sub);
-        return NextResponse.json({success: true, data: draft});
+        const draft = await onboardingService.getOrCreateDraft(session.payload.sub);
+        return respond({success: true, data: draft});
     } catch (err) {
         console.error(err);
-        return errorResponse('Internal server error', 500);
+        return respond({success: false, data: 'Internal server error'}, 500);
     }
-}
-
-function errorResponse(message: string, status: number) {
-    return NextResponse.json({success: false, data: message}, {status});
 }

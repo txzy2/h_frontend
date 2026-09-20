@@ -29,17 +29,17 @@ export default function DashboardLayout({children}: {children: React.ReactNode})
 
     if (isLoading || !user) {
         return (
-            <div className='flex min-h-dvh items-center justify-center bg-[#09090b]'>
-                <div className='h-6 w-6 animate-spin rounded-full border-2 border-amber-500 border-t-transparent' />
+            <div className='flex min-h-dvh items-center justify-center bg-app'>
+                <div className='h-6 w-6 animate-spin rounded-full border-2 border-brand border-t-transparent' />
             </div>
         );
     }
 
     return (
-        <div className='flex min-h-dvh bg-[#09090b] p-0 lg:p-3'>
+        <div className='flex min-h-dvh bg-app p-0 lg:p-3'>
             <Sidebar user={user} onLogout={logout} />
 
-            <div className='flex min-w-0 flex-1 flex-col overflow-hidden bg-[#09090b] lg:ml-3 lg:rounded-xl'>
+            <div className='flex min-w-0 flex-1 flex-col overflow-hidden bg-app lg:ml-3 lg:rounded-xl'>
                 <MobileNav user={user} onLogout={logout} />
                 <main className='flex-1 overflow-auto pb-20 lg:pb-0'>{children}</main>
             </div>

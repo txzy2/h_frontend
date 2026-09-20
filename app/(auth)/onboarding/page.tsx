@@ -86,8 +86,8 @@ function validateLocations(locations: LocationForm[]): LocationErrors {
 
 const inputCls = (hasError?: string) =>
     [
-        'border-zinc-700 bg-zinc-800/50 text-white placeholder:text-zinc-600',
-        'focus-visible:border-amber-500/60 focus-visible:ring-0 focus-visible:ring-offset-0',
+        'border-app-border bg-surface-2/50 text-app-fg placeholder:text-app-subtle',
+        'focus-visible:border-brand/60 focus-visible:ring-0 focus-visible:ring-offset-0',
         'disabled:opacity-40',
         hasError ? 'border-red-500/60' : ''
     ].join(' ');
@@ -289,42 +289,42 @@ export default function Onboarding() {
 
     if (isLoading || isFetching) {
         return (
-            <div className='flex min-h-screen items-center justify-center bg-[#0a0a0a]'>
-                <div className='h-6 w-6 animate-spin rounded-full border-2 border-amber-500 border-t-transparent' />
+            <div className='flex min-h-screen items-center justify-center bg-app'>
+                <div className='h-6 w-6 animate-spin rounded-full border-2 border-brand border-t-transparent' />
             </div>
         );
     }
 
     if (done) {
         return (
-            <div className='flex min-h-screen items-center justify-center bg-[#0a0a0a]'>
+            <div className='flex min-h-screen items-center justify-center bg-app'>
                 <div className='text-center'>
                     <div className='mb-4 flex justify-center'>
-                        <div className='flex h-16 w-16 items-center justify-center rounded-full border border-amber-500/30 bg-amber-500/10'>
-                            <CheckCircle2 size={32} className='text-amber-400' />
+                        <div className='flex h-16 w-16 items-center justify-center rounded-full border border-brand/30 bg-brand/10'>
+                            <CheckCircle2 size={32} className='text-brand' />
                         </div>
                     </div>
-                    <h2 className='text-xl font-bold text-white'>Организация настроена!</h2>
-                    <p className='mt-2 text-sm text-zinc-500'>Переходим в панель управления...</p>
+                    <h2 className='text-xl font-bold text-app-fg'>Организация настроена!</h2>
+                    <p className='mt-2 text-sm text-app-subtle'>Переходим в панель управления...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className='relative flex min-h-screen flex-col overflow-hidden bg-[#0a0a0a]'>
+        <div className='relative flex min-h-screen flex-col overflow-hidden bg-app'>
             {/* Полноэкранный лоадер при сабмите */}
             {submitLoading && (
                 <div className='fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm'>
-                    <Loader2 size={32} className='animate-spin text-amber-400' />
-                    <p className='mt-4 text-sm text-zinc-300'>Сохраняем организацию и точки...</p>
+                    <Loader2 size={32} className='animate-spin text-brand' />
+                    <p className='mt-4 text-sm text-app-fg/80'>Сохраняем организацию и точки...</p>
                 </div>
             )}
 
             {/* Фоновые блюры */}
             <div className='pointer-events-none absolute inset-0 overflow-hidden'>
-                <div className='absolute -left-32 top-0 h-[500px] w-[500px] rounded-full bg-amber-900/10 blur-[120px]' />
-                <div className='absolute -right-32 bottom-0 h-[400px] w-[400px] rounded-full bg-orange-900/8 blur-[120px]' />
+                <div className='absolute -left-32 top-0 h-[500px] w-[500px] rounded-full bg-brand/10 blur-[120px]' />
+                <div className='absolute -right-32 bottom-0 h-[400px] w-[400px] rounded-full bg-brand/8 blur-[120px]' />
             </div>
 
             {/* Сетка */}
@@ -340,8 +340,8 @@ export default function Onboarding() {
             <div className='relative mx-auto w-full max-w-lg flex-1 px-4 py-12'>
                 {/* Лого */}
                 <div className='mb-10 text-center'>
-                    <span className='text-2xl font-bold tracking-tight text-white'>HooBu</span>
-                    <p className='mt-1 text-sm text-zinc-500'>Настройка организации</p>
+                    <span className='text-2xl font-bold tracking-tight text-app-fg'>HooBu</span>
+                    <p className='mt-1 text-sm text-app-subtle'>Настройка организации</p>
                 </div>
 
                 {/* Прогресс шагов */}
@@ -357,10 +357,10 @@ export default function Onboarding() {
                                     className={[
                                         'flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all',
                                         s.num < step
-                                            ? 'bg-amber-500 text-black'
+                                            ? 'bg-brand text-brand-fg'
                                             : s.num === step
-                                              ? 'border-2 border-amber-500 bg-amber-500/10 text-amber-400'
-                                              : 'border border-zinc-700 bg-zinc-900 text-zinc-600'
+                                              ? 'border-2 border-brand bg-brand/10 text-brand'
+                                              : 'border border-app-border bg-surface text-app-subtle'
                                     ].join(' ')}
                                 >
                                     {s.num < step ? '✓' : s.num}
@@ -368,7 +368,7 @@ export default function Onboarding() {
                                 <span
                                     className={[
                                         'mt-1.5 text-[10px] font-medium',
-                                        s.num === step ? 'text-amber-400' : 'text-zinc-600'
+                                        s.num === step ? 'text-brand' : 'text-app-subtle'
                                     ].join(' ')}
                                 >
                                     {s.label}
@@ -378,7 +378,7 @@ export default function Onboarding() {
                                 <div
                                     className={[
                                         'mx-2 mb-4 h-px w-16 transition-all',
-                                        s.num < step ? 'bg-amber-500/50' : 'bg-zinc-800'
+                                        s.num < step ? 'bg-brand/50' : 'bg-surface-2'
                                     ].join(' ')}
                                 />
                             )}
@@ -388,16 +388,16 @@ export default function Onboarding() {
 
                 {/* ── Шаг 2: Организация ── */}
                 {step === 2 && (
-                    <div className='rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 shadow-2xl backdrop-blur-sm'>
+                    <div className='rounded-2xl border border-app-border bg-surface/60 p-8 shadow-2xl backdrop-blur-sm'>
                         <div className='mb-6 flex items-center gap-3'>
-                            <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10'>
-                                <Building2 size={18} className='text-amber-400' />
+                            <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-brand/10'>
+                                <Building2 size={18} className='text-brand' />
                             </div>
                             <div>
-                                <h2 className='text-sm font-semibold text-white'>
+                                <h2 className='text-sm font-semibold text-app-fg'>
                                     Данные организации
                                 </h2>
-                                <p className='text-xs text-zinc-500'>
+                                <p className='text-xs text-app-subtle'>
                                     Заполните юридические данные
                                 </p>
                             </div>
@@ -493,7 +493,7 @@ export default function Onboarding() {
 
                             {/* Тарифный план */}
                             <div className='space-y-2'>
-                                <Label className='text-xs font-medium uppercase tracking-wider text-zinc-400'>
+                                <Label className='text-xs font-medium uppercase tracking-wider text-app-muted'>
                                     Тарифный план
                                 </Label>
                                 {plans.length === 0 ? (
@@ -501,7 +501,7 @@ export default function Onboarding() {
                                         {[1, 2, 3].map(i => (
                                             <div
                                                 key={i}
-                                                className='h-[88px] animate-pulse rounded-lg border border-zinc-800 bg-zinc-800/50'
+                                                className='h-[88px] animate-pulse rounded-lg border border-app-border bg-surface-2/50'
                                             />
                                         ))}
                                     </div>
@@ -517,26 +517,26 @@ export default function Onboarding() {
                                                 className={[
                                                     'rounded-lg border p-3 text-left transition-all',
                                                     orgForm.plan === plan.name
-                                                        ? 'border-amber-500/60 bg-amber-500/10'
-                                                        : 'border-zinc-700 bg-zinc-800/50 hover:border-zinc-600'
+                                                        ? 'border-brand/60 bg-brand/10'
+                                                        : 'border-app-border bg-surface-2/50 hover:border-app-border'
                                                 ].join(' ')}
                                             >
                                                 <div
                                                     className={
                                                         orgForm.plan === plan.name
-                                                            ? 'text-sm font-semibold text-amber-400'
-                                                            : 'text-sm font-semibold text-white'
+                                                            ? 'text-sm font-semibold text-brand'
+                                                            : 'text-sm font-semibold text-app-fg'
                                                     }
                                                 >
                                                     {plan.name}
                                                 </div>
-                                                <div className='mt-0.5 text-xs text-zinc-500'>
+                                                <div className='mt-0.5 text-xs text-app-subtle'>
                                                     {plan.description}
                                                 </div>
-                                                <div className='mt-1 text-xs text-zinc-600'>
+                                                <div className='mt-1 text-xs text-app-subtle'>
                                                     До {plan.maxLocations} точек
                                                 </div>
-                                                <div className='mt-1 text-xs text-zinc-600'>
+                                                <div className='mt-1 text-xs text-app-subtle'>
                                                     {plan.price} ₽ в месяц
                                                 </div>
                                             </button>
@@ -551,7 +551,7 @@ export default function Onboarding() {
                             <Button
                                 type='submit'
                                 disabled={orgLoading}
-                                className='mt-2 w-full bg-amber-500 font-semibold text-black hover:bg-amber-400 disabled:opacity-40'
+                                className='mt-2 w-full bg-brand font-semibold text-brand-fg hover:bg-brand/90 disabled:opacity-40'
                             >
                                 {orgLoading ? (
                                     <>
@@ -568,14 +568,14 @@ export default function Onboarding() {
 
                 {/* ── Шаг 3: Точки ── */}
                 {step === 3 && (
-                    <div className='rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 shadow-2xl backdrop-blur-sm'>
+                    <div className='rounded-2xl border border-app-border bg-surface/60 p-8 shadow-2xl backdrop-blur-sm'>
                         <div className='mb-6 flex items-center gap-3'>
-                            <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10'>
-                                <MapPin size={18} className='text-amber-400' />
+                            <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-brand/10'>
+                                <MapPin size={18} className='text-brand' />
                             </div>
                             <div>
-                                <h2 className='text-sm font-semibold text-white'>Точки продаж</h2>
-                                <p className='text-xs text-zinc-500'>Добавьте ваши кальянные</p>
+                                <h2 className='text-sm font-semibold text-app-fg'>Точки продаж</h2>
+                                <p className='text-xs text-app-subtle'>Добавьте ваши кальянные</p>
                             </div>
                         </div>
 
@@ -595,17 +595,17 @@ export default function Onboarding() {
                             {locations.map((loc, i) => (
                                 <div
                                     key={i}
-                                    className='rounded-xl border border-zinc-800 bg-zinc-800/30 p-4'
+                                    className='rounded-xl border border-app-border bg-surface-2/30 p-4'
                                 >
                                     <div className='mb-3 flex items-center justify-between'>
-                                        <span className='text-xs font-medium text-zinc-400'>
+                                        <span className='text-xs font-medium text-app-muted'>
                                             Точка {i + 1}
                                         </span>
                                         {locations.length > 1 && (
                                             <button
                                                 type='button'
                                                 onClick={() => removeLocation(i)}
-                                                className='text-zinc-600 transition-colors hover:text-red-400'
+                                                className='text-app-subtle transition-colors hover:text-red-400'
                                             >
                                                 <Trash2 size={14} />
                                             </button>
@@ -677,7 +677,7 @@ export default function Onboarding() {
                             <button
                                 type='button'
                                 onClick={addLocation}
-                                className='flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-3 text-sm text-zinc-500 transition-colors hover:border-amber-500/40 hover:text-amber-400'
+                                className='flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-app-border py-3 text-sm text-app-subtle transition-colors hover:border-brand/40 hover:text-brand'
                             >
                                 <Plus size={15} />
                                 Добавить точку
@@ -688,14 +688,14 @@ export default function Onboarding() {
                                     type='button'
                                     variant='outline'
                                     onClick={() => setStep(2)}
-                                    className='border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white'
+                                    className='border-app-border text-app-muted hover:bg-surface-2 hover:text-app-fg'
                                 >
                                     ← Назад
                                 </Button>
                                 <Button
                                     type='submit'
                                     disabled={locLoading || submitLoading}
-                                    className='flex-1 bg-amber-500 font-semibold text-black hover:bg-amber-400 disabled:opacity-40'
+                                    className='flex-1 bg-brand font-semibold text-brand-fg hover:bg-brand/90 disabled:opacity-40'
                                 >
                                     {locLoading || submitLoading ? (
                                         <>
@@ -728,7 +728,7 @@ function Field({
 }) {
     return (
         <div className='space-y-1.5'>
-            <Label className='text-xs font-medium uppercase tracking-wider text-zinc-400'>
+            <Label className='text-xs font-medium uppercase tracking-wider text-app-muted'>
                 {label}
             </Label>
             {children}

@@ -1,7 +1,7 @@
 'use client';
 
 import {usePathname} from 'next/navigation';
-import {Building2, ShieldCheck} from 'lucide-react';
+import {Building2, Palette, ShieldCheck} from 'lucide-react';
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -13,6 +13,7 @@ import {
 import Link from 'next/link';
 
 const NAV_ITEMS = [
+    {href: '/dashboard/settings/appearance', label: 'Оформление', icon: Palette},
     {href: '/dashboard/settings/organization', label: 'Организация', icon: Building2},
     {href: '/dashboard/settings/account', label: 'Аккаунт', icon: ShieldCheck}
 ];
@@ -28,23 +29,23 @@ export default function SettingsLayout({children}: {children: React.ReactNode}) 
                         <BreadcrumbLink asChild>
                             <Link
                                 href='/dashboard'
-                                className='text-zinc-500 transition-colors hover:text-zinc-300'
+                                className='text-app-subtle transition-colors hover:text-app-fg/80'
                             >
                                 Дашборд
                             </Link>
                         </BreadcrumbLink>
                     </BreadcrumbItem>
-                    <BreadcrumbSeparator className='text-zinc-700' />
+                    <BreadcrumbSeparator className='text-app-subtle/70' />
                     <BreadcrumbItem>
-                        <BreadcrumbPage className='text-zinc-300'>Настройки</BreadcrumbPage>
+                        <BreadcrumbPage className='text-app-fg/80'>Настройки</BreadcrumbPage>
                     </BreadcrumbItem>
                 </BreadcrumbList>
             </Breadcrumb>
 
-            <h1 className='mb-5 text-xl font-bold text-white'>Настройки</h1>
+            <h1 className='mb-5 text-xl font-bold text-app-fg'>Настройки</h1>
 
             {/* Мобильные табы */}
-            <nav className='mb-6 flex gap-1 overflow-x-auto border-b border-zinc-800 pb-px md:hidden'>
+            <nav className='mb-6 flex gap-1 overflow-x-auto border-b border-app-border pb-px md:hidden'>
                 {NAV_ITEMS.map(item => {
                     const isActive = pathname.startsWith(item.href);
                     const Icon = item.icon;
@@ -55,8 +56,8 @@ export default function SettingsLayout({children}: {children: React.ReactNode}) 
                             className={[
                                 'flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-sm transition-colors',
                                 isActive
-                                    ? 'border-amber-500 font-medium text-amber-400'
-                                    : 'border-transparent text-zinc-400 hover:text-zinc-200'
+                                    ? 'border-brand font-medium text-brand'
+                                    : 'border-transparent text-app-muted hover:text-app-fg/90'
                             ].join(' ')}
                         >
                             <Icon size={14} />
@@ -80,8 +81,8 @@ export default function SettingsLayout({children}: {children: React.ReactNode}) 
                                     className={[
                                         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
                                         isActive
-                                            ? 'bg-amber-500/10 font-medium text-amber-400'
-                                            : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'
+                                            ? 'bg-brand/10 font-medium text-brand'
+                                            : 'text-app-muted hover:bg-surface-2/60 hover:text-app-fg/90'
                                     ].join(' ')}
                                 >
                                     <Icon size={16} />

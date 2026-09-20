@@ -23,6 +23,15 @@ export class JwtService {
     }
 
     /**
+     * Проверяет, задан ли секрет доступа.
+     * Позволяет отличить ошибку конфигурации от невалидного токена
+     * до вызова verify().
+     */
+    static isConfigured(): boolean {
+        return Boolean(process.env.JWT_ACCESS_SECRET?.trim());
+    }
+
+    /**
      * Декодирует JWT токен без проверки подписи.
      * Используется только для извлечения данных из уже верифицированного токена.
      */
@@ -75,5 +84,23 @@ export class JwtService {
      */
     static isExpired(payload: JwtPayload): boolean {
         return Math.floor(Date.now() / 1000) >= payload.exp;
+    }
+
+    /**
+     * Пора ли обновлять токен: истекает или уже истёк.
+     * Не проверяет подпись — используется только как быстрый фильтр,
+     * после которого токен всё равно верифицируется.
+     */
+    static needsRefresh(token: string, skewSeconds = 60): boolean {
+        const payload = this.decode(token);
+        if (!payload?.exp) return true;
+        return payload.exp - Math.floor(Date.now() / 1000) <= skewSeconds;
+    }
+
+    /**
+     * Возвращает exp токена (unix seconds) без проверки подписи
+     */
+    static getExpiresAt(token: string): number | null {
+        return this.decode(token)?.exp ?? null;
     }
 }

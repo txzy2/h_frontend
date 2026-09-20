@@ -45,10 +45,39 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Семантические токены приложения */
+  --color-app: var(--app-bg);
+  --color-surface: var(--app-surface);
+  --color-surface-2: var(--app-surface-2);
+  --color-app-border: var(--app-border);
+  --color-app-fg: var(--app-fg);
+  --color-app-muted: var(--app-muted);
+  --color-app-subtle: var(--app-subtle);
+  --color-brand: var(--brand);
+  --color-brand-fg: var(--brand-fg);
+  --color-header: var(--header-bg);
+  --color-header-fg: var(--header-fg);
 }
 
 :root {
+  color-scheme: light;
+
   --radius: 0.625rem;
+
+  /* Палитра приложения (светлая тема) */
+  --app-bg: oklch(0.977 0.002 247.839);
+  --app-surface: oklch(1 0 0);
+  --app-surface-2: oklch(0.955 0.003 264.542);
+  --app-border: oklch(0 0 0 / 10%);
+  --app-fg: oklch(0.19 0.02 261.692);
+  --app-muted: oklch(0.45 0.02 261.325);
+  --app-subtle: oklch(0.60 0.02 261.325);
+  --brand: #d97706;
+  --brand-fg: #ffffff;
+  --header-bg: var(--app-surface);
+  --header-fg: var(--app-fg);
+
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.13 0.028 261.692);
   --popover: oklch(1 0 0);
@@ -83,6 +112,21 @@
 }
 
 .dark {
+  color-scheme: dark;
+
+  /* Палитра приложения (тёмная тема) */
+  --app-bg: #09090b;
+  --app-surface: #18181b;
+  --app-surface-2: #27272a;
+  --app-border: oklch(1 0 0 / 10%);
+  --app-fg: oklch(0.985 0.002 247.839);
+  --app-muted: oklch(0.705 0.015 286.067);
+  --app-subtle: oklch(0.552 0.016 285.938);
+  --brand: #f59e0b;
+  --brand-fg: #000000;
+  --header-bg: var(--app-surface);
+  --header-fg: var(--app-fg);
+
   --background: oklch(0.13 0.028 261.692);
   --foreground: oklch(0.985 0.002 247.839);
   --card: oklch(0.21 0.034 264.665);

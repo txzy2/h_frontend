@@ -11,10 +11,10 @@ import {toast} from 'sonner';
 import axios from 'axios';
 
 const STATS = [
-    {icon: CalendarDays, label: 'Броней сегодня', value: '—', color: 'text-amber-400'},
+    {icon: CalendarDays, label: 'Броней сегодня', value: '—', color: 'text-brand'},
     {icon: Users, label: 'Гостей всего', value: '—', color: 'text-orange-400'},
     {icon: TrendingUp, label: 'Загруженность', value: '—', color: 'text-yellow-400'},
-    {icon: Clock, label: 'Среднее время', value: '—', color: 'text-amber-300'}
+    {icon: Clock, label: 'Среднее время', value: '—', color: 'text-brand'}
 ];
 
 export default function Dashboard() {
@@ -75,10 +75,10 @@ export default function Dashboard() {
         <div className='p-6 lg:p-8'>
             {/* Приветствие */}
             <div className='mb-8'>
-                <h1 className='text-2xl font-bold text-white'>
-                    Добро пожаловать, <span className='text-amber-400'>{user.name}</span>
+                <h1 className='text-2xl font-bold text-app-fg'>
+                    Добро пожаловать, <span className='text-brand'>{user.name}</span>
                 </h1>
-                <p className='mt-1 text-sm text-zinc-500'>
+                <p className='mt-1 text-sm text-app-subtle'>
                     Вот что происходит сегодня в вашем заведении
                 </p>
             </div>
@@ -88,27 +88,27 @@ export default function Dashboard() {
                 {STATS.map(stat => (
                     <Card
                         key={stat.label}
-                        className='border-zinc-800 bg-zinc-900/60 backdrop-blur-sm'
+                        className='border-app-border bg-surface/60 backdrop-blur-sm'
                     >
                         <CardHeader className='flex flex-row items-center justify-between pb-2'>
-                            <CardTitle className='text-xs font-medium text-zinc-400'>
+                            <CardTitle className='text-xs font-medium text-app-muted'>
                                 {stat.label}
                             </CardTitle>
                             <stat.icon size={16} className={stat.color} />
                         </CardHeader>
                         <CardContent>
-                            <p className='text-2xl font-bold text-white'>{stat.value}</p>
-                            <p className='mt-1 text-xs text-zinc-600'>Данные появятся позже</p>
+                            <p className='text-2xl font-bold text-app-fg'>{stat.value}</p>
+                            <p className='mt-1 text-xs text-app-subtle'>Данные появятся позже</p>
                         </CardContent>
                     </Card>
                 ))}
             </div>
 
             {/* Заглушка */}
-            <div className='mt-8 flex items-center justify-center rounded-xl border border-dashed border-zinc-800 py-24'>
+            <div className='mt-8 flex items-center justify-center rounded-xl border border-dashed border-app-border py-24'>
                 <div className='text-center'>
-                    <p className='text-sm font-medium text-zinc-400'>Здесь будет основной контент</p>
-                    <p className='mt-1 text-xs text-zinc-600'>
+                    <p className='text-sm font-medium text-app-muted'>Здесь будет основной контент</p>
+                    <p className='mt-1 text-xs text-app-subtle'>
                         Таблица броней, календарь и управление гостями
                     </p>
                 </div>

@@ -1,8 +1,11 @@
 // app/api/locations/route.ts
-import {NextRequest, NextResponse} from 'next/server';
+import {NextRequest} from 'next/server';
 import axios from 'axios';
-import {CookieService} from '@/lib/auth/cookie.service';
-import {JwtService} from '@/lib/auth/jwt.service';
+import {
+    resolveSession,
+    sessionFailureResponse,
+    sessionResponder
+} from '@/lib/auth/session.service';
 
 const MAIN_API_URL = process.env.MAIN_API_URL;
 
@@ -24,24 +27,23 @@ function validateLocation(body: LocationBody): string | null {
 }
 
 export async function POST(request: NextRequest) {
-    const accessToken = CookieService.getAccessToken(request);
-    if (!accessToken) return errorResponse('Not authenticated', 401);
+    const session = await resolveSession(request);
+    if (!session.ok) return sessionFailureResponse(session);
 
-    const payload = JwtService.verify(accessToken);
-    if (!payload) return errorResponse('Token expired', 401);
+    const respond = sessionResponder(session);
 
     try {
         const body: LocationBody = await request.json();
 
         const validationError = validateLocation(body);
-        if (validationError) return errorResponse(validationError, 400);
+        if (validationError) return respond({success: false, data: validationError}, 400);
 
-        const headers = {headers: {Authorization: `Bearer ${accessToken}`}};
+        const headers = {headers: {Authorization: `Bearer ${session.accessToken}`}};
 
         // Точка добавляется только к организации текущего пользователя
         const {data: orgData} = await axios.get(`${MAIN_API_URL}/orgs`, headers);
         const orgId = orgData?.data?.id;
-        if (!orgId) return errorResponse('Организация не найдена', 409);
+        if (!orgId) return respond({success: false, data: 'Организация не найдена'}, 409);
 
         await axios.post(
             `${MAIN_API_URL}/locations/add`,
@@ -59,7 +61,7 @@ export async function POST(request: NextRequest) {
             headers
         );
 
-        return NextResponse.json({success: true, data: 'Точка добавлена'});
+        return respond({success: true, data: 'Точка добавлена'});
     } catch (error) {
         if (axios.isAxiosError(error)) {
             const status = error.response?.status ?? 500;
@@ -68,12 +70,8 @@ export async function POST(request: NextRequest) {
                 error.response?.data?.message ??
                 error.response?.data?.data ??
                 'Ошибка запроса к сервису';
-            return errorResponse(message, status);
+            return respond({success: false, data: message}, status);
         }
-        return errorResponse('Internal server error', 500);
+        return respond({success: false, data: 'Internal server error'}, 500);
     }
-}
-
-function errorResponse(message: string, status: number) {
-    return NextResponse.json({success: false, data: message}, {status});
 }

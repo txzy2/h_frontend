@@ -63,15 +63,15 @@ export function ForgotPasswordModal({open, onClose, initialLogin = ''}: ForgotPa
     };
 
     const inputCls =
-        'border-zinc-700 bg-zinc-800/50 text-white placeholder:text-zinc-600 focus-visible:border-amber-500/60 focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-40';
+        'border-app-border bg-surface-2/50 text-app-fg placeholder:text-app-subtle focus-visible:border-brand/60 focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-40';
 
     return (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm'>
-            <div className='w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl'>
+            <div className='w-full max-w-sm rounded-2xl border border-app-border bg-surface p-6 shadow-2xl'>
                 {!done ? (
                     <>
-                        <h2 className='text-lg font-semibold text-white'>Сброс пароля</h2>
-                        <p className='mt-1 text-sm text-zinc-500'>
+                        <h2 className='text-lg font-semibold text-app-fg'>Сброс пароля</h2>
+                        <p className='mt-1 text-sm text-app-subtle'>
                             Введите логин и email — новый пароль придёт на почту
                         </p>
 
@@ -83,7 +83,7 @@ export function ForgotPasswordModal({open, onClose, initialLogin = ''}: ForgotPa
 
                         <div className='mt-5 space-y-4'>
                             <div className='space-y-1.5'>
-                                <Label className='text-xs font-medium uppercase tracking-wider text-zinc-400'>
+                                <Label className='text-xs font-medium uppercase tracking-wider text-app-muted'>
                                     Логин
                                 </Label>
                                 <Input
@@ -100,7 +100,7 @@ export function ForgotPasswordModal({open, onClose, initialLogin = ''}: ForgotPa
                             </div>
 
                             <div className='space-y-1.5'>
-                                <Label className='text-xs font-medium uppercase tracking-wider text-zinc-400'>
+                                <Label className='text-xs font-medium uppercase tracking-wider text-app-muted'>
                                     Email
                                 </Label>
                                 <Input
@@ -122,14 +122,14 @@ export function ForgotPasswordModal({open, onClose, initialLogin = ''}: ForgotPa
                                     variant='outline'
                                     onClick={onClose}
                                     disabled={isSubmitting}
-                                    className='flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white'
+                                    className='flex-1 border-app-border text-app-fg/80 hover:bg-surface-2 hover:text-app-fg'
                                 >
                                     Отмена
                                 </Button>
                                 <Button
                                     onClick={handleSubmit}
                                     disabled={isSubmitting}
-                                    className='flex-1 bg-amber-500 font-semibold text-black hover:bg-amber-400 disabled:opacity-40'
+                                    className='flex-1 bg-brand font-semibold text-brand-fg hover:bg-brand/90 disabled:opacity-40'
                                 >
                                     {isSubmitting ? (
                                         <Loader2 className='h-4 w-4 animate-spin' />
@@ -143,14 +143,14 @@ export function ForgotPasswordModal({open, onClose, initialLogin = ''}: ForgotPa
                 ) : (
                     <div className='py-4 text-center'>
                         <CheckCircle2 size={48} className='mx-auto mb-4 text-emerald-400' />
-                        <h2 className='text-lg font-semibold text-white'>Пароль сброшен</h2>
-                        <p className='mt-2 text-sm text-zinc-500'>
+                        <h2 className='text-lg font-semibold text-app-fg'>Пароль сброшен</h2>
+                        <p className='mt-2 text-sm text-app-subtle'>
                             Новый пароль отправлен на{' '}
-                            <span className='text-zinc-300'>{email}</span>
+                            <span className='text-app-fg/80'>{email}</span>
                         </p>
                         <Button
                             onClick={onClose}
-                            className='mt-6 w-full bg-amber-500 font-semibold text-black hover:bg-amber-400'
+                            className='mt-6 w-full bg-brand font-semibold text-brand-fg hover:bg-brand/90'
                         >
                             Войти
                         </Button>

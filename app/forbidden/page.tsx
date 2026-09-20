@@ -7,12 +7,12 @@ export default function Forbidden() {
     const router = useRouter();
 
     return (
-        <div className='relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0a0a] p-4'>
+        <div className='relative flex min-h-screen items-center justify-center overflow-hidden bg-app p-4'>
             {/* Фоновые блюры */}
             <div className='pointer-events-none absolute inset-0 overflow-hidden'>
                 <div className='absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full bg-red-900/10 blur-[100px]' />
                 <div className='absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full bg-red-900/8 blur-[100px]' />
-                <div className='absolute left-1/2 top-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-900/5 blur-[80px]' />
+                <div className='absolute left-1/2 top-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/5 blur-[80px]' />
             </div>
 
             {/* Декоративная сетка */}
@@ -28,7 +28,7 @@ export default function Forbidden() {
             <div className='relative flex flex-col items-center text-center'>
                 {/* Код ошибки */}
                 <div className='relative mb-6 select-none'>
-                    <span className='text-[10rem] font-black leading-none tracking-tighter text-zinc-900 md:text-[14rem]'>
+                    <span className='text-[10rem] font-black leading-none tracking-tighter text-app-fg/[0.06] md:text-[14rem]'>
                         403
                     </span>
                     <span
@@ -59,10 +59,10 @@ export default function Forbidden() {
                 </div>
 
                 {/* Текст */}
-                <h1 className='mb-3 text-2xl font-bold tracking-tight text-white'>
+                <h1 className='mb-3 text-2xl font-bold tracking-tight text-app-fg'>
                     Доступ запрещён
                 </h1>
-                <p className='mb-8 max-w-sm text-sm text-zinc-500'>
+                <p className='mb-8 max-w-sm text-sm text-app-subtle'>
                     У вас недостаточно прав для просмотра этой страницы. Обратитесь к
                     администратору, если считаете это ошибкой.
                 </p>
@@ -70,7 +70,7 @@ export default function Forbidden() {
                 {/* Кнопки */}
                 <div className='flex flex-wrap items-center justify-center gap-3'>
                     <Button
-                        className='bg-amber-500 font-semibold text-black hover:bg-amber-400'
+                        className='bg-brand font-semibold text-brand-fg hover:bg-brand/90'
                         onClick={() => router.replace('/')}
                     >
                         На главную
@@ -80,7 +80,7 @@ export default function Forbidden() {
                 {/* Лого внизу */}
                 <button
                     onClick={() => router.push('/')}
-                    className='mt-12 text-xs text-zinc-700 transition-colors hover:text-zinc-500'
+                    className='mt-12 text-xs text-app-subtle/70 transition-colors hover:text-app-subtle'
                 >
                     HooBu
                 </button>

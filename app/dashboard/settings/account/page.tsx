@@ -124,14 +124,14 @@ export default function AccountPage() {
 
     return (
         <div className='max-w-md'>
-            <div className='rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 backdrop-blur-sm'>
+            <div className='rounded-2xl border border-app-border bg-surface/60 p-8 backdrop-blur-sm'>
                 <div className='mb-6 flex items-center gap-3'>
-                    <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10'>
-                        <ShieldCheck size={18} className='text-amber-400' />
+                    <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-brand/10'>
+                        <ShieldCheck size={18} className='text-brand' />
                     </div>
                     <div>
-                        <h2 className='text-sm font-semibold text-white'>Смена пароля</h2>
-                        <p className='text-xs text-zinc-500'>
+                        <h2 className='text-sm font-semibold text-app-fg'>Смена пароля</h2>
+                        <p className='text-xs text-app-subtle'>
                             Код подтверждения придёт на {user?.email}
                         </p>
                     </div>
@@ -145,14 +145,14 @@ export default function AccountPage() {
 
                 <form onSubmit={handleSubmit} noValidate className='space-y-4'>
                     <div className='space-y-1.5'>
-                        <Label className='text-xs font-medium uppercase tracking-wider text-zinc-400'>
+                        <Label className='text-xs font-medium uppercase tracking-wider text-app-muted'>
                             Логин
                         </Label>
                         <Input
                             name='login'
                             value={form.login}
                             readOnly
-                            className='cursor-default border-zinc-700 bg-zinc-800/30 text-zinc-400 focus-visible:ring-0 focus-visible:ring-offset-0'
+                            className='cursor-default border-app-border bg-surface-2/30 text-app-muted focus-visible:ring-0 focus-visible:ring-offset-0'
                         />
                     </div>
 
@@ -167,7 +167,7 @@ export default function AccountPage() {
                         onChange={handleChange}
                     />
 
-                    <div className='border-t border-zinc-800 pt-4'>
+                    <div className='border-t border-app-border pt-4'>
                         <div className='space-y-4'>
                             <PasswordField
                                 id='new_password'
@@ -193,14 +193,14 @@ export default function AccountPage() {
                         </div>
                     </div>
 
-                    <p className='text-xs text-zinc-600'>
+                    <p className='text-xs text-app-subtle'>
                         Пароль должен содержать минимум 8 символов, цифру и спецсимвол
                     </p>
 
                     <Button
                         type='submit'
                         disabled={isSubmitting}
-                        className='w-full bg-amber-500 font-semibold text-black hover:bg-amber-400 disabled:opacity-40'
+                        className='w-full bg-brand font-semibold text-brand-fg hover:bg-brand/90 disabled:opacity-40'
                     >
                         {isSubmitting ? (
                             <>
@@ -246,7 +246,7 @@ function PasswordField({
         <div className='space-y-1.5'>
             <Label
                 htmlFor={id}
-                className='text-xs font-medium uppercase tracking-wider text-zinc-400'
+                className='text-xs font-medium uppercase tracking-wider text-app-muted'
             >
                 {label}
             </Label>
@@ -262,8 +262,8 @@ function PasswordField({
                     autoComplete='off'
                     maxLength={32}
                     className={[
-                        'border-zinc-700 bg-zinc-800/50 pr-10 text-white placeholder:text-zinc-600',
-                        'focus-visible:border-amber-500/60 focus-visible:ring-0 focus-visible:ring-offset-0',
+                        'border-app-border bg-surface-2/50 pr-10 text-app-fg placeholder:text-app-subtle',
+                        'focus-visible:border-brand/60 focus-visible:ring-0 focus-visible:ring-offset-0',
                         'disabled:opacity-40',
                         error ? 'border-red-500/60' : ''
                     ].join(' ')}
@@ -272,7 +272,7 @@ function PasswordField({
                     type='button'
                     onClick={onToggle}
                     tabIndex={-1}
-                    className='absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 transition-colors hover:text-zinc-300'
+                    className='absolute right-3 top-1/2 -translate-y-1/2 text-app-subtle transition-colors hover:text-app-fg/80'
                 >
                     {show ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>

@@ -1,27 +1,25 @@
 // app/api/orgs/route.ts
-import {NextRequest, NextResponse} from 'next/server';
+import {NextRequest} from 'next/server';
 import axios from 'axios';
-import {CookieService} from '@/lib/auth/cookie.service';
-import {JwtService} from '@/lib/auth/jwt.service';
+import {
+    resolveSession,
+    sessionFailureResponse,
+    sessionResponder
+} from '@/lib/auth/session.service';
 
 const MAIN_API_URL = process.env.MAIN_API_URL;
 
-function errorResponse(message: string, status: number) {
-    return NextResponse.json({success: false, data: message}, {status});
-}
-
 export async function GET(request: NextRequest) {
-    const accessToken = CookieService.getAccessToken(request);
-    if (!accessToken) return errorResponse('Not authenticated', 401);
+    const session = await resolveSession(request);
+    if (!session.ok) return sessionFailureResponse(session);
 
-    const payload = JwtService.verify(accessToken);
-    if (!payload) return errorResponse('Token expired', 401);
+    const respond = sessionResponder(session);
 
     try {
         const {data} = await axios.get(`${MAIN_API_URL}/orgs`, {
-            headers: {Authorization: `Bearer ${accessToken}`}
+            headers: {Authorization: `Bearer ${session.accessToken}`}
         });
-        return NextResponse.json({success: true, data: data.data});
+        return respond({success: true, data: data.data});
     } catch (error) {
         if (axios.isAxiosError(error)) {
             const status = error.response?.status ?? 500;
@@ -33,11 +31,11 @@ export async function GET(request: NextRequest) {
 
             // 409 — организация не найдена / не активна (ожидаемое состояние)
             if (status === 409) {
-                return NextResponse.json({success: false, data: null, message}, {status: 409});
+                return respond({success: false, data: null, message}, 409);
             }
 
-            return errorResponse(message, status);
+            return respond({success: false, data: message}, status);
         }
-        return errorResponse('Internal server error', 500);
+        return respond({success: false, data: 'Internal server error'}, 500);
     }
 }

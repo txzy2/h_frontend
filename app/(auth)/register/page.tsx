@@ -128,34 +128,34 @@ export default function Register() {
     // Если юзер уже авторизован — показываем спиннер пока редиректим
     if (user) {
         return (
-            <div className='flex min-h-screen items-center justify-center bg-[#0a0a0a]'>
-                <div className='h-6 w-6 animate-spin rounded-full border-2 border-amber-500 border-t-transparent' />
+            <div className='flex min-h-screen items-center justify-center bg-app'>
+                <div className='h-6 w-6 animate-spin rounded-full border-2 border-brand border-t-transparent' />
             </div>
         );
     }
 
     const inputCls = (field: keyof FormErrors) =>
         [
-            'border-zinc-700 bg-zinc-800/50 text-white placeholder:text-zinc-600',
-            'focus-visible:border-amber-500/60 focus-visible:ring-0 focus-visible:ring-offset-0',
+            'border-app-border bg-surface-2/50 text-app-fg placeholder:text-app-subtle',
+            'focus-visible:border-brand/60 focus-visible:ring-0 focus-visible:ring-offset-0',
             'disabled:opacity-40',
             errors[field] ? 'border-red-500/60' : ''
         ].join(' ');
 
     return (
-        <div className='relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0a0a] p-4'>
+        <div className='relative flex min-h-screen items-center justify-center overflow-hidden bg-app p-4'>
             {/* Полноэкранный лоадер при отправке */}
             {isLoading && (
                 <div className='fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm'>
-                    <Loader2 size={32} className='animate-spin text-amber-400' />
-                    <p className='mt-4 text-sm text-zinc-300'>Отправляем код на почту...</p>
+                    <Loader2 size={32} className='animate-spin text-brand' />
+                    <p className='mt-4 text-sm text-app-fg/80'>Отправляем код на почту...</p>
                 </div>
             )}
 
             {/* Фоновые блюры */}
             <div className='pointer-events-none absolute inset-0 overflow-hidden'>
-                <div className='absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full bg-amber-900/15 blur-[100px]' />
-                <div className='absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full bg-orange-900/10 blur-[100px]' />
+                <div className='absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full bg-brand/15 blur-[100px]' />
+                <div className='absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full bg-brand/10 blur-[100px]' />
             </div>
 
             {/* Декоративная сетка */}
@@ -174,17 +174,17 @@ export default function Register() {
                 <div className='mb-8 text-center'>
                     <Button
                         variant={'link'}
-                        className='text-3xl font-bold tracking-tight text-white  m-0 p-0 transition-all hover:scale-105'
+                        className='text-3xl font-bold tracking-tight text-app-fg  m-0 p-0 transition-all hover:scale-105'
                         onClick={() => router.push('/')}
                     >
                         HooBu
                     </Button>
-                    <p className='mt-1.5 text-sm text-zinc-500'>
+                    <p className='mt-1.5 text-sm text-app-subtle'>
                         Зарегистрируйте новую организацию
                     </p>
                 </div>
 
-                <div className='rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 shadow-2xl backdrop-blur-sm'>
+                <div className='rounded-2xl border border-app-border bg-surface/60 p-8 shadow-2xl backdrop-blur-sm'>
                     {/* Общая ошибка */}
                     {errors.general && (
                         <div className='mb-5 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400'>
@@ -197,7 +197,7 @@ export default function Register() {
                         <div className='space-y-1.5'>
                             <Label
                                 htmlFor='name'
-                                className='text-xs font-medium uppercase tracking-wider text-zinc-400'
+                                className='text-xs font-medium uppercase tracking-wider text-app-muted'
                             >
                                 ФИО
                             </Label>
@@ -221,7 +221,7 @@ export default function Register() {
                         <div className='space-y-1.5'>
                             <Label
                                 htmlFor='login'
-                                className='text-xs font-medium uppercase tracking-wider text-zinc-400'
+                                className='text-xs font-medium uppercase tracking-wider text-app-muted'
                             >
                                 Логин
                             </Label>
@@ -244,7 +244,7 @@ export default function Register() {
                         <div className='space-y-1.5'>
                             <Label
                                 htmlFor='email'
-                                className='text-xs font-medium uppercase tracking-wider text-zinc-400'
+                                className='text-xs font-medium uppercase tracking-wider text-app-muted'
                             >
                                 Email
                             </Label>
@@ -267,7 +267,7 @@ export default function Register() {
                         <div className='space-y-1.5'>
                             <Label
                                 htmlFor='password'
-                                className='text-xs font-medium uppercase tracking-wider text-zinc-400'
+                                className='text-xs font-medium uppercase tracking-wider text-app-muted'
                             >
                                 Пароль
                             </Label>
@@ -287,7 +287,7 @@ export default function Register() {
                                 <button
                                     type='button'
                                     onClick={() => setShowPassword(prev => !prev)}
-                                    className='absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 transition-colors hover:text-zinc-300'
+                                    className='absolute right-3 top-1/2 -translate-y-1/2 text-app-subtle transition-colors hover:text-app-fg/80'
                                     tabIndex={-1}
                                     aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
                                 >
@@ -303,7 +303,7 @@ export default function Register() {
                         <div className='space-y-1.5'>
                             <Label
                                 htmlFor='confirm_password'
-                                className='text-xs font-medium uppercase tracking-wider text-zinc-400'
+                                className='text-xs font-medium uppercase tracking-wider text-app-muted'
                             >
                                 Подтвердите пароль
                             </Label>
@@ -323,7 +323,7 @@ export default function Register() {
                                 <button
                                     type='button'
                                     onClick={() => setShowConfirm(prev => !prev)}
-                                    className='absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 transition-colors hover:text-zinc-300'
+                                    className='absolute right-3 top-1/2 -translate-y-1/2 text-app-subtle transition-colors hover:text-app-fg/80'
                                     tabIndex={-1}
                                     aria-label={showConfirm ? 'Скрыть пароль' : 'Показать пароль'}
                                 >
@@ -339,7 +339,7 @@ export default function Register() {
                         <Button
                             type='submit'
                             disabled={isLoading}
-                            className='w-full bg-amber-500 font-semibold text-black hover:bg-amber-400 disabled:opacity-40'
+                            className='w-full bg-brand font-semibold text-brand-fg hover:bg-brand/90 disabled:opacity-40'
                         >
                             {isLoading ? (
                                 <>
@@ -355,12 +355,12 @@ export default function Register() {
 
                 {/* Ссылки */}
                 <div className='mt-6 flex flex-col items-center gap-2'>
-                    <p className='text-xs text-zinc-600'>
+                    <p className='text-xs text-app-subtle'>
                         Уже есть аккаунт?{' '}
                         <Button
                             variant={'link'}
                             onClick={() => router.push('/login')}
-                            className='text-zinc-500 transition-colors hover:text-zinc-300 m-0 p-0 text-[12px]'
+                            className='text-app-subtle transition-colors hover:text-app-fg/80 m-0 p-0 text-[12px]'
                         >
                             Войти
                         </Button>
@@ -368,7 +368,7 @@ export default function Register() {
                     <Button
                         variant={'link'}
                         onClick={() => router.push('/')}
-                        className='text-xs text-zinc-600 transition-colors hover:text-zinc-400 m-0 p-0 text-[12px]'
+                        className='text-xs text-app-subtle transition-colors hover:text-app-muted m-0 p-0 text-[12px]'
                     >
                         ← Вернуться на главную
                     </Button>

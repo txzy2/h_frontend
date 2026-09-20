@@ -58,3 +58,18 @@ model DraftLocation {
 
   @@map("draft_location")
 }
+
+/// Кастомизация интерфейса организации (цвета, логотип)
+model OrganizationAppearance {
+  id          String   @id @default(uuid())
+  orgId       Int      @unique @map("org_id")
+  brandColor  String   @default("#f59e0b") @map("brand_color") @db.VarChar(7)
+  headerColor String?  @map("header_color") @db.VarChar(7)
+  logo        Bytes?
+  logoMime    String?  @map("logo_mime") @db.VarChar(50)
+  updatedBy   String   @map("updated_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("organization_appearance")
+}

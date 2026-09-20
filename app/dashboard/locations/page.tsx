@@ -44,8 +44,8 @@ const EMPTY_FORM: LocationForm = {name: '', address: '', phone: '', activePlaces
 
 const inputCls = (hasError?: string) =>
     [
-        'border-zinc-700 bg-zinc-800/50 text-white placeholder:text-zinc-600',
-        'focus-visible:border-amber-500/60 focus-visible:ring-0 focus-visible:ring-offset-0',
+        'border-app-border bg-surface-2/50 text-app-fg placeholder:text-app-subtle',
+        'focus-visible:border-brand/60 focus-visible:ring-0 focus-visible:ring-offset-0',
         hasError ? 'border-red-500/60' : ''
     ].join(' ');
 
@@ -73,9 +73,9 @@ function getStatusConfig(status: string) {
         return {label: 'Активна', className: 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400'};
     }
     if (status === 'Pending') {
-        return {label: 'На проверке', className: 'border-amber-500/30 bg-amber-500/15 text-amber-400'};
+        return {label: 'На проверке', className: 'border-brand/30 bg-brand/15 text-brand'};
     }
-    return {label: 'Неактивна', className: 'border-zinc-500/30 bg-zinc-500/15 text-zinc-400'};
+    return {label: 'Неактивна', className: 'border-zinc-500/30 bg-zinc-500/15 text-app-muted'};
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -182,15 +182,15 @@ export default function LocationsPage() {
                         <BreadcrumbLink asChild>
                             <Link
                                 href='/dashboard'
-                                className='text-zinc-500 transition-colors hover:text-zinc-300'
+                                className='text-app-subtle transition-colors hover:text-app-fg/80'
                             >
                                 Дашборд
                             </Link>
                         </BreadcrumbLink>
                     </BreadcrumbItem>
-                    <BreadcrumbSeparator className='text-zinc-700' />
+                    <BreadcrumbSeparator className='text-app-subtle/70' />
                     <BreadcrumbItem>
-                        <BreadcrumbPage className='text-zinc-300'>Точки</BreadcrumbPage>
+                        <BreadcrumbPage className='text-app-fg/80'>Точки</BreadcrumbPage>
                     </BreadcrumbItem>
                 </BreadcrumbList>
             </Breadcrumb>
@@ -198,8 +198,8 @@ export default function LocationsPage() {
             {/* Заголовок */}
             <div className='mb-6 flex flex-wrap items-end justify-between gap-4'>
                 <div>
-                    <h1 className='text-xl font-bold text-white'>Точки продаж</h1>
-                    <p className='mt-1 text-sm text-zinc-500'>
+                    <h1 className='text-xl font-bold text-app-fg'>Точки продаж</h1>
+                    <p className='mt-1 text-sm text-app-subtle'>
                         {org
                             ? `${org.name} · ${org.locations.length} ${pluralPoints(org.locations.length)}`
                             : 'Управление точками вашей организации'}
@@ -208,7 +208,7 @@ export default function LocationsPage() {
                 {canAdd && !showForm && (
                     <Button
                         onClick={() => setShowForm(true)}
-                        className='bg-amber-500 font-semibold text-black hover:bg-amber-400'
+                        className='bg-brand font-semibold text-brand-fg hover:bg-brand/90'
                     >
                         <Plus size={15} />
                         Добавить точку
@@ -218,15 +218,15 @@ export default function LocationsPage() {
 
             {/* Форма добавления */}
             {showForm && (
-                <div className='mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 backdrop-blur-sm'>
+                <div className='mb-6 rounded-2xl border border-app-border bg-surface/60 p-6 backdrop-blur-sm'>
                     <div className='mb-5 flex items-start justify-between'>
                         <div className='flex items-center gap-3'>
-                            <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10'>
-                                <Plus size={18} className='text-amber-400' />
+                            <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-brand/10'>
+                                <Plus size={18} className='text-brand' />
                             </div>
                             <div>
-                                <h2 className='text-sm font-semibold text-white'>Новая точка</h2>
-                                <p className='text-xs text-zinc-500'>
+                                <h2 className='text-sm font-semibold text-app-fg'>Новая точка</h2>
+                                <p className='text-xs text-app-subtle'>
                                     Заполните данные точки продаж
                                 </p>
                             </div>
@@ -234,7 +234,7 @@ export default function LocationsPage() {
                         <button
                             type='button'
                             onClick={closeForm}
-                            className='text-zinc-600 transition-colors hover:text-zinc-300'
+                            className='text-app-subtle transition-colors hover:text-app-fg/80'
                         >
                             <X size={16} />
                         </button>
@@ -300,14 +300,14 @@ export default function LocationsPage() {
                                 variant='outline'
                                 disabled={saving}
                                 onClick={closeForm}
-                                className='border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white'
+                                className='border-app-border text-app-muted hover:bg-surface-2 hover:text-app-fg'
                             >
                                 Отмена
                             </Button>
                             <Button
                                 type='submit'
                                 disabled={saving}
-                                className='flex-1 bg-amber-500 font-semibold text-black hover:bg-amber-400 disabled:opacity-40'
+                                className='flex-1 bg-brand font-semibold text-brand-fg hover:bg-brand/90 disabled:opacity-40'
                             >
                                 {saving ? (
                                     <>
@@ -327,7 +327,7 @@ export default function LocationsPage() {
             {loading ? (
                 <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3'>
                     {[1, 2, 3].map(i => (
-                        <Skeleton key={i} className='h-36 rounded-xl bg-zinc-800/60' />
+                        <Skeleton key={i} className='h-36 rounded-xl bg-surface-2/60' />
                     ))}
                 </div>
             ) : error ? (
@@ -335,11 +335,11 @@ export default function LocationsPage() {
                     {error}
                 </div>
             ) : !org ? (
-                <div className='flex items-center gap-3 rounded-lg border border-zinc-700/50 bg-zinc-800/30 px-4 py-3'>
-                    <Building2 size={16} className='text-zinc-500' />
-                    <p className='text-sm text-zinc-400'>
+                <div className='flex items-center gap-3 rounded-lg border border-app-border/50 bg-surface-2/30 px-4 py-3'>
+                    <Building2 size={16} className='text-app-subtle' />
+                    <p className='text-sm text-app-muted'>
                         Организация ещё не создана.{' '}
-                        <Link href='/onboarding' className='text-amber-400 hover:underline'>
+                        <Link href='/onboarding' className='text-brand hover:underline'>
                             Завершите регистрацию
                         </Link>
                     </p>
@@ -347,13 +347,13 @@ export default function LocationsPage() {
             ) : (
                 <>
                     {org.status === 'Pending' && (
-                        <div className='mb-6 flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3'>
-                            <Clock size={16} className='mt-0.5 shrink-0 text-amber-400' />
+                        <div className='mb-6 flex items-start gap-3 rounded-lg border border-brand/20 bg-brand/5 px-4 py-3'>
+                            <Clock size={16} className='mt-0.5 shrink-0 text-brand' />
                             <div>
-                                <p className='text-sm font-medium text-amber-300'>
+                                <p className='text-sm font-medium text-brand'>
                                     Организация на проверке
                                 </p>
-                                <p className='mt-1 text-xs text-zinc-400'>
+                                <p className='mt-1 text-xs text-app-muted'>
                                     Добавление точек станет доступно после активации организации.
                                 </p>
                             </div>
@@ -361,18 +361,18 @@ export default function LocationsPage() {
                     )}
 
                     {org.locations.length === 0 ? (
-                        <div className='flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-800 py-16'>
-                            <div className='mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10'>
-                                <MapPin size={22} className='text-amber-400' />
+                        <div className='flex flex-col items-center justify-center rounded-xl border border-dashed border-app-border py-16'>
+                            <div className='mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-brand/10'>
+                                <MapPin size={22} className='text-brand' />
                             </div>
-                            <p className='text-sm font-medium text-zinc-300'>Точек пока нет</p>
-                            <p className='mt-1 text-xs text-zinc-500'>
+                            <p className='text-sm font-medium text-app-fg/80'>Точек пока нет</p>
+                            <p className='mt-1 text-xs text-app-subtle'>
                                 Добавьте первую точку продаж
                             </p>
                             {canAdd && (
                                 <Button
                                     onClick={() => setShowForm(true)}
-                                    className='mt-5 bg-amber-500 font-semibold text-black hover:bg-amber-400'
+                                    className='mt-5 bg-brand font-semibold text-brand-fg hover:bg-brand/90'
                                 >
                                     <Plus size={15} />
                                     Добавить точку
@@ -386,17 +386,17 @@ export default function LocationsPage() {
                                 return (
                                     <div
                                         key={location.id}
-                                        className='rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 transition-colors hover:border-zinc-700'
+                                        className='rounded-xl border border-app-border bg-surface/60 p-5 transition-colors hover:border-app-border'
                                     >
                                         <div className='mb-4 flex items-start justify-between gap-3'>
                                             <div className='flex min-w-0 items-center gap-2.5'>
-                                                <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10'>
+                                                <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand/10'>
                                                     <MapPin
                                                         size={15}
-                                                        className='text-amber-400'
+                                                        className='text-brand'
                                                     />
                                                 </div>
-                                                <h3 className='truncate text-sm font-semibold text-white'>
+                                                <h3 className='truncate text-sm font-semibold text-app-fg'>
                                                     {location.name}
                                                 </h3>
                                             </div>
@@ -431,8 +431,8 @@ export default function LocationsPage() {
 function InfoRow({icon: Icon, text}: {icon: typeof MapPin; text: string}) {
     return (
         <div className='flex items-start gap-2 text-sm'>
-            <Icon size={14} className='mt-0.5 shrink-0 text-zinc-500' />
-            <span className='text-zinc-300'>{text}</span>
+            <Icon size={14} className='mt-0.5 shrink-0 text-app-subtle' />
+            <span className='text-app-fg/80'>{text}</span>
         </div>
     );
 }
@@ -448,7 +448,7 @@ function Field({
 }) {
     return (
         <div className='space-y-1.5'>
-            <Label className='text-xs font-medium uppercase tracking-wider text-zinc-400'>
+            <Label className='text-xs font-medium uppercase tracking-wider text-app-muted'>
                 {label}
             </Label>
             {children}

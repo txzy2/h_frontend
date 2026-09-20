@@ -3,6 +3,7 @@
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
+import {useSession} from '@/hooks/useSession';
 import {useAuthStore} from '@/stores/auth.store';
 import {LoginSuccessResponse, LoginErrorResponse} from '@/types/auth';
 import axios from 'axios';
@@ -34,7 +35,8 @@ function validate(form: FormState): FormErrors {
 
 export default function Login() {
     const router = useRouter();
-    const {setUser, user} = useAuthStore();
+    const {user} = useAuthStore();
+    const {startSession} = useSession();
 
     const [form, setForm] = useState<FormState>({login: '', password: ''});
     const [errors, setErrors] = useState<FormErrors>({});
@@ -89,7 +91,7 @@ export default function Login() {
 
             if (data.success) {
                 const userData = data.data as UserData;
-                setUser(userData);
+                startSession(userData, data.expiresAt);
             } else {
                 setErrors({general: typeof data.data === 'string' ? data.data : 'Ошибка входа'});
             }
@@ -108,11 +110,11 @@ export default function Login() {
     if (!mounted) return null;
 
     return (
-        <div className='relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0a0a] p-4'>
+        <div className='relative flex min-h-screen items-center justify-center overflow-hidden bg-app p-4'>
             {/* Фоновые блюры */}
             <div className='pointer-events-none absolute inset-0 overflow-hidden'>
-                <div className='absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full bg-amber-900/15 blur-[100px]' />
-                <div className='absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full bg-orange-900/10 blur-[100px]' />
+                <div className='absolute -left-32 top-1/4 h-[400px] w-[400px] rounded-full bg-brand/15 blur-[100px]' />
+                <div className='absolute -right-32 bottom-1/4 h-[350px] w-[350px] rounded-full bg-brand/10 blur-[100px]' />
             </div>
 
             {/* Декоративная сетка */}
@@ -131,15 +133,15 @@ export default function Login() {
                 <div className='mb-6 text-center'>
                     <Button
                         variant='link'
-                        className='m-0 p-0 text-3xl font-bold tracking-tight text-white transition-all hover:scale-105'
+                        className='m-0 p-0 text-3xl font-bold tracking-tight text-app-fg transition-all hover:scale-105'
                         onClick={() => router.push('/')}
                     >
                         HooBu
                     </Button>
-                    <p className='mt-1.5 text-sm text-zinc-500'>Войдите в панель управления</p>
+                    <p className='mt-1.5 text-sm text-app-subtle'>Войдите в панель управления</p>
                 </div>
 
-                <div className='rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 shadow-2xl backdrop-blur-sm sm:p-8'>
+                <div className='rounded-2xl border border-app-border bg-surface/60 p-6 shadow-2xl backdrop-blur-sm sm:p-8'>
                     {/* Общая ошибка */}
                     {errors.general && (
                         <div className='mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400'>
@@ -152,7 +154,7 @@ export default function Login() {
                         <div className='space-y-1.5'>
                             <Label
                                 htmlFor='login'
-                                className='text-xs font-medium uppercase tracking-wider text-zinc-400'
+                                className='text-xs font-medium uppercase tracking-wider text-app-muted'
                             >
                                 Логин
                             </Label>
@@ -168,8 +170,8 @@ export default function Login() {
                                 onChange={handleChange}
                                 maxLength={20}
                                 className={[
-                                    'border-zinc-700 bg-zinc-800/50 text-white placeholder:text-zinc-600',
-                                    'focus-visible:border-amber-500/60 focus-visible:ring-0 focus-visible:ring-offset-0',
+                                    'border-app-border bg-surface-2/50 text-app-fg placeholder:text-app-subtle',
+                                    'focus-visible:border-brand/60 focus-visible:ring-0 focus-visible:ring-offset-0',
                                     'disabled:opacity-40',
                                     errors.login ? 'border-red-500/60' : ''
                                 ].join(' ')}
@@ -182,13 +184,13 @@ export default function Login() {
                             <div className='flex items-center justify-between'>
                                 <Label
                                     htmlFor='password'
-                                    className='text-xs font-medium uppercase tracking-wider text-zinc-400'
+                                    className='text-xs font-medium uppercase tracking-wider text-app-muted'
                                 >
                                     Пароль
                                 </Label>
                                 <Button
                                     variant='link'
-                                    className='h-auto p-0 text-[11px] text-zinc-600 hover:text-zinc-400'
+                                    className='h-auto p-0 text-[11px] text-app-subtle hover:text-app-muted'
                                     type='button'
                                     onClick={async () => await resetPassword()}
                                 >
@@ -207,8 +209,8 @@ export default function Login() {
                                     onChange={handleChange}
                                     maxLength={32}
                                     className={[
-                                        'border-zinc-700 bg-zinc-800/50 pr-10 text-white placeholder:text-zinc-600',
-                                        'focus-visible:border-amber-500/60 focus-visible:ring-0 focus-visible:ring-offset-0',
+                                        'border-app-border bg-surface-2/50 pr-10 text-app-fg placeholder:text-app-subtle',
+                                        'focus-visible:border-brand/60 focus-visible:ring-0 focus-visible:ring-offset-0',
                                         'disabled:opacity-40',
                                         errors.password ? 'border-red-500/60' : ''
                                     ].join(' ')}
@@ -216,7 +218,7 @@ export default function Login() {
                                 <button
                                     type='button'
                                     onClick={() => setShowPassword(prev => !prev)}
-                                    className='absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 transition-colors hover:text-zinc-300'
+                                    className='absolute right-3 top-1/2 -translate-y-1/2 text-app-subtle transition-colors hover:text-app-fg/80'
                                     tabIndex={-1}
                                     aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
                                 >
@@ -232,7 +234,7 @@ export default function Login() {
                         <Button
                             type='submit'
                             disabled={isLoading}
-                            className='w-full bg-amber-500 font-semibold text-black hover:bg-amber-400 disabled:opacity-40'
+                            className='w-full bg-brand font-semibold text-brand-fg hover:bg-brand/90 disabled:opacity-40'
                         >
                             {isLoading ? (
                                 <>
@@ -250,10 +252,10 @@ export default function Login() {
                 <div className='mt-5'>
                     <div className='relative mb-5'>
                         <div className='absolute inset-0 flex items-center'>
-                            <div className='w-full border-t border-zinc-800' />
+                            <div className='w-full border-t border-app-border' />
                         </div>
                         <div className='relative flex justify-center text-xs'>
-                            <span className='bg-[#0a0a0a] px-3 text-zinc-600'>или</span>
+                            <span className='bg-app px-3 text-app-subtle'>или</span>
                         </div>
                     </div>
 
@@ -261,7 +263,7 @@ export default function Login() {
                         <button
                             type='button'
                             disabled
-                            className='flex h-10 items-center justify-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/50 text-sm text-zinc-500 transition-colors hover:border-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed'
+                            className='flex h-10 items-center justify-center gap-2 rounded-lg border border-app-border bg-surface/50 text-sm text-app-subtle transition-colors hover:border-app-border hover:text-app-fg/80 disabled:opacity-50 disabled:cursor-not-allowed'
                         >
                             <YandexIcon />
                             Яндекс
@@ -269,23 +271,23 @@ export default function Login() {
                         <button
                             type='button'
                             disabled
-                            className='flex h-10 items-center justify-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/50 text-sm text-zinc-500 transition-colors hover:border-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed'
+                            className='flex h-10 items-center justify-center gap-2 rounded-lg border border-app-border bg-surface/50 text-sm text-app-subtle transition-colors hover:border-app-border hover:text-app-fg/80 disabled:opacity-50 disabled:cursor-not-allowed'
                         >
                             <VkIcon />
                             ВКонтакте
                         </button>
                     </div>
-                    <p className='mt-2 text-center text-[10px] text-zinc-700'>Скоро будет доступно</p>
+                    <p className='mt-2 text-center text-[10px] text-app-subtle/70'>Скоро будет доступно</p>
                 </div>
 
                 {/* Ссылки */}
                 <div className='mt-6 flex flex-col items-center gap-2'>
-                    <p className='text-xs text-zinc-600'>
+                    <p className='text-xs text-app-subtle'>
                         Нет аккаунта?{' '}
                         <Button
                             variant='link'
                             onClick={() => router.push('/register')}
-                            className='m-0 p-0 text-[12px] text-zinc-500 transition-colors hover:text-zinc-300'
+                            className='m-0 p-0 text-[12px] text-app-subtle transition-colors hover:text-app-fg/80'
                         >
                             Зарегистрироваться
                         </Button>
@@ -293,7 +295,7 @@ export default function Login() {
                     <Button
                         variant='link'
                         onClick={() => router.push('/')}
-                        className='m-0 p-0 text-[12px] text-zinc-600 transition-colors hover:text-zinc-400'
+                        className='m-0 p-0 text-[12px] text-app-subtle transition-colors hover:text-app-muted'
                     >
                         ← Вернуться на главную
                     </Button>

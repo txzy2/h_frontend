@@ -1,12 +1,14 @@
 // app/api/onboarding/submit/route.ts
-import {NextRequest, NextResponse} from 'next/server';
+import {NextRequest} from 'next/server';
 import axios from 'axios';
-import {CookieService} from '@/lib/auth/cookie.service';
-import {JwtService} from '@/lib/auth/jwt.service';
+import {
+    resolveSession,
+    sessionFailureResponse,
+    sessionResponder
+} from '@/lib/auth/session.service';
 
 import {db} from '@/lib/db-client';
 import {OnboardingService} from '@/lib/services/onboarding.service';
-import {Orbitron} from 'next/font/google';
 
 const onboardingService = new OnboardingService(db);
 const MAIN_API_URL = process.env.MAIN_API_URL;
@@ -39,20 +41,23 @@ async function getExistingOrgId(accessToken: string): Promise<number | null> {
 }
 
 export async function POST(request: NextRequest) {
-    const accessToken = CookieService.getAccessToken(request);
-    if (!accessToken) return errorResponse('Not authenticated', 401);
+    const session = await resolveSession(request);
+    if (!session.ok) return sessionFailureResponse(session);
 
-    const payload = JwtService.verify(accessToken);
-    if (!payload) return errorResponse('Token expired', 401);
+    const respond = sessionResponder(session);
+    const accessToken = session.accessToken;
 
     try {
-        const body = await request.json();
-        const draft = await onboardingService.getOrCreateDraft(payload.sub);
+        await request.json();
+        const draft = await onboardingService.getOrCreateDraft(session.payload.sub);
 
         // Проверяем полноту черновика
-        if (!draft.organization) return errorResponse('Данные организации не заполнены', 400);
-        if (!draft.locations.length) return errorResponse('Добавьте хотя бы одну точку', 400);
-        if (draft.currentStep < 3) return errorResponse('Не все шаги завершены', 400);
+        if (!draft.organization)
+            return respond({success: false, data: 'Данные организации не заполнены'}, 400);
+        if (!draft.locations.length)
+            return respond({success: false, data: 'Добавьте хотя бы одну точку'}, 400);
+        if (draft.currentStep < 3)
+            return respond({success: false, data: 'Не все шаги завершены'}, 400);
 
         const organization = draft.organization;
         const headers = authHeaders(accessToken);
@@ -60,8 +65,6 @@ export async function POST(request: NextRequest) {
         // 1. Проверяем, есть ли у пользователя уже созданная организация
         let orgId = await getExistingOrgId(accessToken);
         let justRegistered = false;
-
-        console.log(orgId);
 
         // 2. Если организации нет — регистрируем её
         if (orgId === null) {
@@ -80,7 +83,7 @@ export async function POST(request: NextRequest) {
                 );
 
                 if (!data.success) {
-                    return errorResponse(data.message ?? 'Ошибка создания организации', 400);
+                    return respond({success: false, data: data.message ?? 'Ошибка создания организации'}, 400);
                 }
 
                 orgId = data.data.id;
@@ -90,8 +93,11 @@ export async function POST(request: NextRequest) {
                 if (axios.isAxiosError(error) && error.response?.status === 409) {
                     orgId = await getExistingOrgId(accessToken);
                     if (orgId === null) {
-                        return errorResponse(
-                            'Организация с такими реквизитами уже зарегистрирована другой учётной записью',
+                        return respond(
+                            {
+                                success: false,
+                                data: 'Организация с такими реквизитами уже зарегистрирована другой учётной записью'
+                            },
                             409
                         );
                     }
@@ -102,7 +108,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (orgId === null) {
-            return errorResponse('Не удалось определить организацию', 500);
+            return respond({success: false, data: 'Не удалось определить организацию'}, 500);
         }
 
         // 3. Добавляем точки из черновика в организацию (в основном API)
@@ -123,8 +129,11 @@ export async function POST(request: NextRequest) {
         } catch (error) {
             // Только что созданная организация ещё на проверке — точки добавим позже
             if (justRegistered && axios.isAxiosError(error) && error.response?.status === 409) {
-                return errorResponse(
-                    'Организация создана и ожидает проверки. Точки можно добавить после её активации',
+                return respond(
+                    {
+                        success: false,
+                        data: 'Организация создана и ожидает проверки. Точки можно добавить после её активации'
+                    },
                     409
                 );
             }
@@ -133,7 +142,7 @@ export async function POST(request: NextRequest) {
 
         await onboardingService.markCompleted(draft.id, orgId);
 
-        return NextResponse.json({success: true, data: 'Организация и точки сохранены'});
+        return respond({success: true, data: 'Организация и точки сохранены'});
     } catch (error) {
         if (axios.isAxiosError(error)) {
             const status = error.response?.status ?? 500;
@@ -141,12 +150,8 @@ export async function POST(request: NextRequest) {
                 error.response?.data?.error ??
                 error.response?.data?.message ??
                 'Ошибка запроса к сервису';
-            return errorResponse(message, status);
+            return respond({success: false, data: message}, status);
         }
-        return errorResponse('Internal server error', 500);
+        return respond({success: false, data: 'Internal server error'}, 500);
     }
-}
-
-function errorResponse(message: string, status: number) {
-    return NextResponse.json({success: false, data: message}, {status});
 }
