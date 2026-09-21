@@ -1,6 +1,7 @@
 'use client';
 
 import {Sidebar, MobileNav} from '@/components/layout/sidebar';
+import {QuickBookingButton} from '@/components/dashboard/quick-booking-button';
 import {useSession} from '@/hooks/useSession';
 import {useAuthStore} from '@/stores/auth.store';
 import axios from 'axios';
@@ -36,13 +37,16 @@ export default function DashboardLayout({children}: {children: React.ReactNode})
     }
 
     return (
-        <div className='flex min-h-dvh bg-app p-0 lg:p-3'>
+        <div className='flex h-dvh overflow-hidden bg-app p-0 lg:p-3'>
             <Sidebar user={user} onLogout={logout} />
 
-            <div className='flex min-w-0 flex-1 flex-col overflow-hidden bg-app lg:ml-3 lg:rounded-xl'>
+            <div className='flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-app lg:ml-3 lg:rounded-xl'>
                 <MobileNav user={user} onLogout={logout} />
                 <main className='flex-1 overflow-auto pb-20 lg:pb-0'>{children}</main>
             </div>
+
+            {/* Быстрое создание брони — только Manager / Admin / SuperUser */}
+            <QuickBookingButton />
         </div>
     );
 }

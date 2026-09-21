@@ -23,6 +23,18 @@ export class OnboardingService {
         return draft;
     }
 
+    /**
+     * Текущий черновик пользователя без создания нового.
+     * Нужен для проверок (например, на главной), чтобы не плодить черновики
+     * пользователям, которые онбординг не проходили.
+     */
+    public async getCurrentDraft(userId: string): Promise<RegistrationDraftWithRelations | null> {
+        const completed = await this.draftRepo.findCompletedByUser(userId);
+        if (completed) return completed;
+
+        return this.draftRepo.findActiveByUser(userId);
+    }
+
     public async saveOrganization(
         draftId: string,
         data: {

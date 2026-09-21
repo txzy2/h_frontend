@@ -40,3 +40,31 @@ export async function userHasPermission(
     const permissions = await fetchUserPermissions(accessToken);
     return permissions.some(item => item.name === permission);
 }
+
+export type PermissionCheckResult =
+    | {allowed: true}
+    | {allowed: false; reason: 'forbidden' | 'unauthorized' | 'unavailable'};
+
+/**
+ * Проверка права с классификацией ошибок:
+ * - forbidden — права нет;
+ * - unauthorized — сессию отверг auth-сервис;
+ * - unavailable — auth-сервис недоступен (fail closed).
+ */
+export async function checkUserPermission(
+    accessToken: string,
+    permission: PermissionName
+): Promise<PermissionCheckResult> {
+    try {
+        const allowed = await userHasPermission(accessToken, permission);
+        return allowed ? {allowed: true} : {allowed: false, reason: 'forbidden'};
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            const status = error.response?.status ?? 0;
+            if (status === 401 || status === 403) {
+                return {allowed: false, reason: 'unauthorized'};
+            }
+        }
+        return {allowed: false, reason: 'unavailable'};
+    }
+}

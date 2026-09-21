@@ -14,7 +14,7 @@ import {
 } from '@/lib/auth/session.service';
 import {db} from '@/lib/db-client';
 import {AppearanceService} from '@/lib/services/appearance.service';
-import {userHasPermission} from '@/lib/services/permission.service';
+import {checkUserPermission} from '@/lib/services/permission.service';
 import {PERMISSIONS} from '@/lib/auth/permissions.constants';
 import {
     isValidHexColor,
@@ -159,29 +159,26 @@ export async function PUT(
 
     const respond = sessionResponder(session);
 
-    // Проверяем право в auth-сервисе (h_backend), а не роль на клиенте
-    let canEdit: boolean;
-    try {
-        canEdit = await userHasPermission(session.accessToken, PERMISSIONS.ORG_APPEARANCE_EDIT);
-    } catch (error) {
-        if (axios.isAxiosError(error)) {
-            const status = error.response?.status ?? 0;
-            if (status === 401 || status === 403) {
-                return sessionRevokedResponse<UpdateOrganizationAppearanceResponse>(
-                    {success: false, data: 'Session expired or invalid'},
-                    401
-                );
-            }
-        }
-        console.error('org appearance permission check error:', error);
-        // Не смогли проверить право — запрещаем (fail closed)
-        return respond<UpdateOrganizationAppearanceResponse>(
-            {success: false, data: 'Не удалось проверить права доступа'},
-            503
-        );
-    }
+    // Проверяем права в auth-сервисе (h_backend), а не роль на клиенте.
+    // Цвета — org.appearance.edit, логотип — отдельное право org.appearance.logo.
+    const editPermission = await checkUserPermission(
+        session.accessToken,
+        PERMISSIONS.ORG_APPEARANCE_EDIT
+    );
 
-    if (!canEdit) {
+    if (!editPermission.allowed) {
+        if (editPermission.reason === 'unauthorized') {
+            return sessionRevokedResponse<UpdateOrganizationAppearanceResponse>(
+                {success: false, data: 'Session expired or invalid'},
+                401
+            );
+        }
+        if (editPermission.reason === 'unavailable') {
+            return respond<UpdateOrganizationAppearanceResponse>(
+                {success: false, data: 'Не удалось проверить права доступа'},
+                503
+            );
+        }
         return respond<UpdateOrganizationAppearanceResponse>(
             {success: false, data: 'Недостаточно прав для настройки оформления'},
             403
@@ -205,6 +202,34 @@ export async function PUT(
                 {success: false, data: parsed.error},
                 400
             );
+        }
+
+        // Логотип — отдельное право
+        const touchesLogo = Boolean(parsed.value.logo || parsed.value.removeLogo);
+        if (touchesLogo) {
+            const logoPermission = await checkUserPermission(
+                session.accessToken,
+                PERMISSIONS.ORG_APPEARANCE_LOGO
+            );
+
+            if (!logoPermission.allowed) {
+                if (logoPermission.reason === 'unauthorized') {
+                    return sessionRevokedResponse<UpdateOrganizationAppearanceResponse>(
+                        {success: false, data: 'Session expired or invalid'},
+                        401
+                    );
+                }
+                if (logoPermission.reason === 'unavailable') {
+                    return respond<UpdateOrganizationAppearanceResponse>(
+                        {success: false, data: 'Не удалось проверить права доступа'},
+                        503
+                    );
+                }
+                return respond<UpdateOrganizationAppearanceResponse>(
+                    {success: false, data: 'Логотип может изменить только администратор организации'},
+                    403
+                );
+            }
         }
 
         const appearance = await appearanceService.upsert(

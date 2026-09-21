@@ -2,21 +2,22 @@
 
 import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
 import {useBranding} from '@/components/providers/branding-provider';
-import {ThemeToggle} from '@/components/layout/theme-toggle';
 import {UserData} from '@/types/auth/jwt.types';
 import {
     LayoutDashboard,
     CalendarDays,
     Users,
-    Settings,
     LogOut,
     ChevronDown,
     MapPin,
-    BarChart3,
     PanelLeftClose,
-    PanelLeftOpen
+    PanelLeftOpen,
+    Building2,
+    Palette,
+    ShieldCheck
 } from 'lucide-react';
 import {useRouter, usePathname} from 'next/navigation';
+import {useTheme} from 'next-themes';
 import {useCallback, useEffect, useState} from 'react';
 import {
     DropdownMenu,
@@ -37,9 +38,7 @@ const NAV_ITEMS = [
     {href: '/dashboard', label: 'Главная', icon: LayoutDashboard},
     {href: '/dashboard/bookings', label: 'Бронирования', icon: CalendarDays},
     {href: '/dashboard/guests', label: 'Гости', icon: Users},
-    {href: '/dashboard/locations', label: 'Точки', icon: MapPin},
-    {href: '/dashboard/analytics', label: 'Аналитика', icon: BarChart3},
-    {href: '/dashboard/settings', label: 'Настройки', icon: Settings}
+    {href: '/dashboard/locations', label: 'Точки', icon: MapPin}
 ];
 
 function getAvatarUrl(seed: string): string {
@@ -79,7 +78,11 @@ export function Sidebar({user, onLogout}: SidebarProps) {
     }, []);
 
     const time = clock.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'});
-    const dateLong = clock.toLocaleDateString('ru-RU', {day: 'numeric', month: 'long', year: 'numeric'});
+    const dateLong = clock.toLocaleDateString('ru-RU', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
 
     const w = collapsed ? 'w-[68px]' : 'w-60';
 
@@ -87,12 +90,12 @@ export function Sidebar({user, onLogout}: SidebarProps) {
         <aside
             className={`hidden shrink-0 flex-col rounded-xl border border-header-fg/10 bg-header/70 backdrop-blur-xl transition-all duration-200 lg:flex ${w}`}
         >
-            {/* Верх: лого организации + управление */}
+            {/* Верх: лого организации */}
             <div
                 className={[
                     'flex gap-2',
                     collapsed
-                        ? 'flex-col items-center px-2 pt-4 pb-2'
+                        ? 'justify-center px-2 pt-4 pb-2'
                         : 'items-start justify-between px-3 pt-4 pb-2'
                 ].join(' ')}
             >
@@ -120,13 +123,7 @@ export function Sidebar({user, onLogout}: SidebarProps) {
                     )}
                 </button>
 
-                <div
-                    className={[
-                        'flex shrink-0 gap-0.5',
-                        collapsed ? 'flex-col items-center' : 'items-center'
-                    ].join(' ')}
-                >
-                    <ThemeToggle side='right' />
+                {!collapsed && (
                     <TooltipProvider delayDuration={0}>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -134,22 +131,18 @@ export function Sidebar({user, onLogout}: SidebarProps) {
                                     onClick={toggleCollapsed}
                                     className='shrink-0 rounded-lg p-1.5 text-header-fg/60 transition-colors hover:bg-header-fg/[0.08] hover:text-header-fg'
                                 >
-                                    {collapsed ? (
-                                        <PanelLeftOpen size={18} />
-                                    ) : (
-                                        <PanelLeftClose size={16} />
-                                    )}
+                                    <PanelLeftClose size={16} />
                                 </button>
                             </TooltipTrigger>
                             <TooltipContent
                                 side='right'
                                 className='border-app-border bg-surface-2 text-app-fg/90'
                             >
-                                {collapsed ? 'Развернуть' : 'Свернуть'}
+                                Свернуть
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
-                </div>
+                )}
             </div>
 
             {/* Часы */}
@@ -169,7 +162,7 @@ export function Sidebar({user, onLogout}: SidebarProps) {
             </div>
 
             {/* Навигация */}
-            <nav className='flex-1 space-y-0.5 px-2'>
+            <nav className='flex-1 space-y-0.5 overflow-y-auto px-2'>
                 <TooltipProvider delayDuration={0}>
                     {NAV_ITEMS.map(item => {
                         const isActive =
@@ -183,9 +176,7 @@ export function Sidebar({user, onLogout}: SidebarProps) {
                                 onClick={() => router.push(item.href)}
                                 className={[
                                     'flex w-full items-center gap-3 rounded-lg transition-colors',
-                                    collapsed
-                                        ? 'justify-center px-0 py-2.5'
-                                        : 'px-3 py-2',
+                                    collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2',
                                     isActive
                                         ? 'bg-header-fg/[0.10] text-header-fg font-medium'
                                         : 'text-header-fg/60 hover:bg-header-fg/[0.06] hover:text-header-fg'
@@ -218,8 +209,29 @@ export function Sidebar({user, onLogout}: SidebarProps) {
                 </TooltipProvider>
             </nav>
 
-            {/* Низ: профиль */}
+            {/* Низ: развернуть (в свёрнутом виде) + профиль */}
             <div className='border-t border-header-fg/10 p-2'>
+                {collapsed && (
+                    <TooltipProvider delayDuration={0}>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <button
+                                    onClick={toggleCollapsed}
+                                    className='mb-1 flex w-full items-center justify-center rounded-lg p-2 text-header-fg/60 transition-colors hover:bg-header-fg/[0.08] hover:text-header-fg'
+                                >
+                                    <PanelLeftOpen size={18} />
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent
+                                side='right'
+                                className='border-app-border bg-surface-2 text-app-fg/90'
+                            >
+                                Развернуть
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )}
+
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <button
@@ -253,7 +265,7 @@ export function Sidebar({user, onLogout}: SidebarProps) {
                         side='top'
                         align='start'
                         sideOffset={8}
-                        className='w-56 border-app-border/50 bg-surface'
+                        className='w-60 border-app-border/50 bg-surface'
                     >
                         <DropdownMenuLabel className='font-normal'>
                             <div className='flex items-center gap-3'>
@@ -271,14 +283,34 @@ export function Sidebar({user, onLogout}: SidebarProps) {
                                 </div>
                             </div>
                         </DropdownMenuLabel>
+
                         <DropdownMenuSeparator className='bg-surface-2' />
+
                         <DropdownMenuItem
-                            onClick={() => router.push('/dashboard/settings')}
+                            onClick={() => router.push('/dashboard/settings/organization')}
                             className='gap-2 text-app-fg/80 focus:bg-surface-2 focus:text-app-fg'
                         >
-                            <Settings size={14} />
-                            Настройки
+                            <Building2 size={14} />
+                            Организация
                         </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={() => router.push('/dashboard/settings/account')}
+                            className='gap-2 text-app-fg/80 focus:bg-surface-2 focus:text-app-fg'
+                        >
+                            <ShieldCheck size={14} />
+                            Аккаунт и пароль
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={() => router.push('/dashboard/settings/appearance')}
+                            className='gap-2 text-app-fg/80 focus:bg-surface-2 focus:text-app-fg'
+                        >
+                            <Palette size={14} />
+                            Оформление
+                        </DropdownMenuItem>
+
+                        <DropdownMenuSeparator className='bg-surface-2' />
+                        <ThemeMenuRow />
+
                         <DropdownMenuSeparator className='bg-surface-2' />
                         <DropdownMenuItem
                             onClick={onLogout}
@@ -300,8 +332,7 @@ const MOBILE_NAV = [
     {href: '/dashboard', label: 'Главная', icon: LayoutDashboard},
     {href: '/dashboard/bookings', label: 'Брони', icon: CalendarDays},
     {href: '/dashboard/guests', label: 'Гости', icon: Users},
-    {href: '/dashboard/locations', label: 'Точки', icon: MapPin},
-    {href: '/dashboard/analytics', label: 'Аналитика', icon: BarChart3}
+    {href: '/dashboard/locations', label: 'Точки', icon: MapPin}
 ];
 
 export function MobileNav({user, onLogout}: SidebarProps) {
@@ -335,7 +366,6 @@ export function MobileNav({user, onLogout}: SidebarProps) {
                 </button>
                 <div className='flex items-center gap-1'>
                     <HeaderClock />
-                    <ThemeToggle />
                 </div>
             </header>
 
@@ -355,16 +385,12 @@ export function MobileNav({user, onLogout}: SidebarProps) {
                             >
                                 <Icon
                                     size={20}
-                                    className={
-                                        isActive ? 'text-brand' : 'text-app-subtle'
-                                    }
+                                    className={isActive ? 'text-brand' : 'text-app-subtle'}
                                 />
                                 <span
                                     className={[
                                         'text-[10px]',
-                                        isActive
-                                            ? 'font-medium text-brand'
-                                            : 'text-app-subtle'
+                                        isActive ? 'font-medium text-brand' : 'text-app-subtle'
                                     ].join(' ')}
                                 >
                                     {item.label}
@@ -378,10 +404,7 @@ export function MobileNav({user, onLogout}: SidebarProps) {
                         <DropdownMenuTrigger asChild>
                             <button className='flex flex-1 flex-col items-center gap-1 py-1'>
                                 <Avatar className='h-5 w-5'>
-                                    <AvatarImage
-                                        src={getAvatarUrl(user.name)}
-                                        alt={user.name}
-                                    />
+                                    <AvatarImage src={getAvatarUrl(user.name)} alt={user.name} />
                                     <AvatarFallback className='bg-surface-2 text-[8px] text-app-muted'>
                                         {getInitials(user.name)}
                                     </AvatarFallback>
@@ -393,7 +416,7 @@ export function MobileNav({user, onLogout}: SidebarProps) {
                             side='top'
                             align='end'
                             sideOffset={8}
-                            className='w-52 border-app-border/50 bg-surface'
+                            className='w-60 border-app-border/50 bg-surface'
                         >
                             <DropdownMenuLabel className='font-normal'>
                                 <div className='flex items-center gap-3'>
@@ -418,12 +441,28 @@ export function MobileNav({user, onLogout}: SidebarProps) {
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator className='bg-surface-2' />
                             <DropdownMenuItem
-                                onClick={() => router.push('/dashboard/settings')}
+                                onClick={() => router.push('/dashboard/settings/organization')}
                                 className='gap-2 text-app-fg/80 focus:bg-surface-2 focus:text-app-fg'
                             >
-                                <Settings size={14} />
-                                Настройки
+                                <Building2 size={14} />
+                                Организация
                             </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => router.push('/dashboard/settings/account')}
+                                className='gap-2 text-app-fg/80 focus:bg-surface-2 focus:text-app-fg'
+                            >
+                                <ShieldCheck size={14} />
+                                Аккаунт и пароль
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => router.push('/dashboard/settings/appearance')}
+                                className='gap-2 text-app-fg/80 focus:bg-surface-2 focus:text-app-fg'
+                            >
+                                <Palette size={14} />
+                                Оформление
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator className='bg-surface-2' />
+                            <ThemeMenuRow />
                             <DropdownMenuSeparator className='bg-surface-2' />
                             <DropdownMenuItem
                                 onClick={onLogout}
@@ -440,13 +479,49 @@ export function MobileNav({user, onLogout}: SidebarProps) {
     );
 }
 
+/** Переключение темы прямо в меню профиля */
+function ThemeMenuRow() {
+    const {theme} = useTheme();
+    const {chooseTheme} = useBranding();
+
+    const options = [
+        {value: 'light', label: 'Светлая'},
+        {value: 'dark', label: 'Тёмная'},
+        {value: 'system', label: 'Система'}
+    ] as const;
+
+    return (
+        <div className='px-1 py-1.5'>
+            <p className='mb-1.5 px-2 text-[10px] uppercase tracking-wider text-app-subtle'>
+                Тема
+            </p>
+            <div className='flex gap-0.5 rounded-lg border border-app-border bg-surface-2/40 p-0.5'>
+                {options.map(option => (
+                    <button
+                        key={option.value}
+                        type='button'
+                        onClick={() => chooseTheme(option.value)}
+                        className={[
+                            'flex-1 rounded-md px-1.5 py-1 text-[11px] transition-colors',
+                            theme === option.value
+                                ? 'bg-surface font-medium text-app-fg shadow-sm'
+                                : 'text-app-muted hover:text-app-fg'
+                        ].join(' ')}
+                    >
+                        {option.label}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 function HeaderClock() {
     const [now, setNow] = useState(() => new Date());
     useEffect(() => {
         const interval = setInterval(() => setNow(new Date()), 60_000);
         return () => clearInterval(interval);
     }, []);
-
     return (
         <span className='font-mono text-xs text-header-fg/50'>
             {now.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'})}

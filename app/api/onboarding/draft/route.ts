@@ -17,7 +17,13 @@ export async function GET(request: NextRequest) {
     const respond = sessionResponder(session);
 
     try {
-        const draft = await onboardingService.getOrCreateDraft(session.payload.sub);
+        // create=false — только читаем текущий черновик, не создаём новый
+        const createNew = request.nextUrl.searchParams.get('create') !== 'false';
+
+        const draft = createNew
+            ? await onboardingService.getOrCreateDraft(session.payload.sub)
+            : await onboardingService.getCurrentDraft(session.payload.sub);
+
         return respond({success: true, data: draft});
     } catch (err) {
         console.error(err);

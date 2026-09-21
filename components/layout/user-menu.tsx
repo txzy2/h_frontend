@@ -9,7 +9,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import {useAuthStore} from '@/stores/auth.store';
 import {UserData} from '@/types/auth/jwt.types';
 import {LogOut, Mail, Shield, User, ChevronDown} from 'lucide-react';
 import {useRouter} from 'next/navigation';
@@ -33,9 +32,6 @@ function getInitials(name: string): string {
 }
 
 export function UserMenu({user, onLogout}: UserMenuProps) {
-    const permissions = useAuthStore(state => state.permissions);
-    console.log('[permissions]', permissions);
-
     const router = useRouter();
 
     return (

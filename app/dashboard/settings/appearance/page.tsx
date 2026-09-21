@@ -42,7 +42,9 @@ export default function AppearancePage() {
     const {appearance, orgName, loading} = useBranding();
     const permissions = useAuthStore(state => state.permissions);
 
+    // Цвета — org.appearance.edit, логотип — отдельное право org.appearance.logo
     const canEditBranding = hasPermission(permissions, PERMISSIONS.ORG_APPEARANCE_EDIT);
+    const canEditLogo = hasPermission(permissions, PERMISSIONS.ORG_APPEARANCE_LOGO);
 
     // При смене сохранённого оформления форма пересоздаётся с новыми значениями
     const formKey = appearance
@@ -88,11 +90,8 @@ export default function AppearancePage() {
                     <div className='mb-5 flex items-start gap-3 rounded-lg border border-app-border bg-surface-2/50 px-4 py-3'>
                         <ShieldCheck size={16} className='mt-0.5 shrink-0 text-app-subtle' />
                         <p className='text-sm text-app-muted'>
-                            Менять цвета и логотип может пользователь с правом{' '}
-                            <span className='font-mono text-xs text-app-fg/80'>
-                                {PERMISSIONS.ORG_APPEARANCE_EDIT}
-                            </span>{' '}
-                            (например, администратор организации).
+                            Цвета интерфейса настраивает администратор организации. Ваша личная
+                            тема — в блоке выше, она сохраняется только для вас.
                         </p>
                     </div>
                 )}
@@ -116,6 +115,7 @@ export default function AppearancePage() {
                         appearance={appearance}
                         orgName={orgName}
                         canEdit={canEditBranding}
+                        canEditLogo={canEditLogo}
                     />
                 )}
             </div>
@@ -164,9 +164,10 @@ interface AppearanceFormProps {
     appearance: OrganizationAppearance | null;
     orgName: string;
     canEdit: boolean;
+    canEditLogo: boolean;
 }
 
-function AppearanceForm({appearance, orgName, canEdit}: AppearanceFormProps) {
+function AppearanceForm({appearance, orgName, canEdit, canEditLogo}: AppearanceFormProps) {
     const {logoUrl, saving, save} = useBranding();
 
     const [brandColor, setBrandColor] = useState(appearance?.brandColor ?? DEFAULT_BRAND_COLOR);
@@ -315,67 +316,76 @@ function AppearanceForm({appearance, orgName, canEdit}: AppearanceFormProps) {
                 </div>
             </section>
 
-            {/* Логотип */}
+            {/* Логотип — отдельное право org.appearance.logo */}
             <section>
                 <Label className='mb-2 block text-xs font-medium uppercase tracking-wider text-app-muted'>
                     Логотип организации
                 </Label>
-                <div className='flex flex-wrap items-center gap-4'>
-                    <div className='flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border border-app-border bg-surface-2/40'>
-                        {effectiveLogo ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                                src={effectiveLogo}
-                                alt='Логотип'
-                                className='h-full w-full object-cover'
-                            />
-                        ) : (
-                            <Building2 size={22} className='text-app-subtle' />
-                        )}
-                    </div>
 
-                    <div className='flex flex-wrap gap-2'>
-                        <input
-                            ref={fileInputRef}
-                            type='file'
-                            accept='image/png,image/jpeg,image/webp'
-                            onChange={handleLogoSelect}
-                            className='hidden'
-                        />
-                        <Button
-                            type='button'
-                            variant='outline'
-                            size='sm'
-                            className='gap-2'
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                            <Upload size={14} />
-                            Загрузить
-                        </Button>
-                        {(logoUrl || logoPreview) && !logoRemoved && (
+                <fieldset disabled={!canEditLogo || saving}>
+                    <div className='flex flex-wrap items-center gap-4'>
+                        <div className='flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border border-app-border bg-surface-2/40'>
+                            {effectiveLogo ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                    src={effectiveLogo}
+                                    alt='Логотип'
+                                    className='h-full w-full object-cover'
+                                />
+                            ) : (
+                                <Building2 size={22} className='text-app-subtle' />
+                            )}
+                        </div>
+
+                        <div className='flex flex-wrap gap-2'>
+                            <input
+                                ref={fileInputRef}
+                                type='file'
+                                accept='image/png,image/jpeg,image/webp'
+                                onChange={handleLogoSelect}
+                                className='hidden'
+                            />
                             <Button
                                 type='button'
                                 variant='outline'
                                 size='sm'
-                                className='gap-2 text-red-400 hover:text-red-400'
-                                onClick={() => {
-                                    setLogoPreview(null);
-                                    setLogoRemoved(true);
-                                    if (fileInputRef.current) {
-                                        fileInputRef.current.value = '';
-                                    }
-                                }}
+                                className='gap-2'
+                                onClick={() => fileInputRef.current?.click()}
                             >
-                                <Trash2 size={14} />
-                                Удалить
+                                <Upload size={14} />
+                                Загрузить
                             </Button>
-                        )}
+                            {(logoUrl || logoPreview) && !logoRemoved && (
+                                <Button
+                                    type='button'
+                                    variant='outline'
+                                    size='sm'
+                                    className='gap-2 text-red-400 hover:text-red-400'
+                                    onClick={() => {
+                                        setLogoPreview(null);
+                                        setLogoRemoved(true);
+                                        if (fileInputRef.current) {
+                                            fileInputRef.current.value = '';
+                                        }
+                                    }}
+                                >
+                                    <Trash2 size={14} />
+                                    Удалить
+                                </Button>
+                            )}
+                        </div>
                     </div>
-                </div>
-                <p className='mt-2 flex items-center gap-1.5 text-xs text-app-subtle'>
-                    <ImageIcon size={12} />
-                    PNG, JPEG или WebP, до 256 КБ
-                </p>
+                    <p className='mt-2 flex items-center gap-1.5 text-xs text-app-subtle'>
+                        <ImageIcon size={12} />
+                        PNG, JPEG или WebP, до 256 КБ
+                    </p>
+                </fieldset>
+
+                {!canEditLogo && (
+                    <p className='mt-2 text-xs text-app-subtle'>
+                        Логотип может изменить только администратор организации.
+                    </p>
+                )}
             </section>
 
             {/* Превью */}

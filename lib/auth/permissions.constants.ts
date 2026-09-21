@@ -3,8 +3,14 @@
 // Имена прав из auth-сервиса (h_backend). Общие для клиента и сервера.
 
 export const PERMISSIONS = {
-    /** Изменение оформления организации: цвета, логотип, тема по умолчанию */
-    ORG_APPEARANCE_EDIT: 'org.appearance.edit'
+    /** Изменение оформления организации: цвета интерфейса */
+    ORG_APPEARANCE_EDIT: 'org.appearance.edit',
+    /** Изменение логотипа организации */
+    ORG_APPEARANCE_LOGO: 'org.appearance.logo',
+    /** Просмотр финансовых показателей: выручка, средний чек */
+    VIEW_ORG_FINANCE: 'view.org.finance',
+    /** Просмотр броней организации (операционная работа) */
+    VIEW_ORG_RESERVATIONS: 'view.org.reservations'
 } as const;
 
 export type PermissionName = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
