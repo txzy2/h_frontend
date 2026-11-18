@@ -1,10 +1,11 @@
 // app/api/dashboard/summary/route.ts
 //
 // Финансовая сводка для главной (админский дашборд).
-// Пока отдаём демонстрационные данные (lib/mock/dashboard.mock.ts).
+// Данные берутся из основного API (h_main_backend).
 // Доступ — по праву view.org.finance (SuperUser / Admin).
 
 import {NextRequest, NextResponse} from 'next/server';
+import axios from 'axios';
 import {
     resolveSession,
     sessionFailureResponse,
@@ -13,8 +14,9 @@ import {
 } from '@/lib/auth/session.service';
 import {checkUserPermission} from '@/lib/services/permission.service';
 import {PERMISSIONS} from '@/lib/auth/permissions.constants';
-import {getMockDashboardSummary} from '@/lib/mock/dashboard.mock';
-import {DashboardSummaryResponse} from '@/types/dashboard';
+import {DashboardSummary, DashboardSummaryResponse} from '@/types/dashboard';
+
+const MAIN_API_URL = process.env.MAIN_API_URL;
 
 export async function GET(
     request: NextRequest
@@ -50,8 +52,40 @@ export async function GET(
         );
     }
 
-    return respond<DashboardSummaryResponse>({
-        success: true,
-        data: getMockDashboardSummary()
-    });
+    const refresh = request.nextUrl.searchParams.get('refresh');
+
+    try {
+        const {data} = await axios.get<{success: true; data: DashboardSummary}>(
+            `${MAIN_API_URL}/dashboard/summary`,
+            {
+                headers: {Authorization: `Bearer ${session.accessToken}`},
+                params: refresh ? {refresh} : undefined
+            }
+        );
+
+        return respond<DashboardSummaryResponse>({success: true, data: data.data});
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            const status = error.response?.status ?? 502;
+
+            if (status === 401) {
+                return sessionRevokedResponse<DashboardSummaryResponse>(
+                    {success: false, data: 'Session expired or invalid'},
+                    401
+                );
+            }
+
+            const message =
+                error.response?.data?.message ??
+                error.response?.data?.data ??
+                'Ошибка загрузки дашборда';
+
+            return respond<DashboardSummaryResponse>({success: false, data: message}, status);
+        }
+
+        return respond<DashboardSummaryResponse>(
+            {success: false, data: 'Internal server error'},
+            500
+        );
+    }
 }

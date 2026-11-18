@@ -6,6 +6,7 @@ import {
     sessionFailureResponse,
     sessionResponder
 } from '@/lib/auth/session.service';
+import {isValidPhone, normalizePhone} from '@/lib/phone';
 
 const MAIN_API_URL = process.env.MAIN_API_URL;
 
@@ -20,7 +21,7 @@ function validateLocation(body: LocationBody): string | null {
     if (!body.name?.trim()) return 'Введите название точки';
     if (!body.address?.trim()) return 'Введите адрес точки';
     if (!body.phone?.trim()) return 'Введите телефон точки';
-    if (!/^\d{10,11}$/.test(body.phone)) return 'Телефон должен содержать 10 или 11 цифр';
+    if (!isValidPhone(body.phone)) return 'Введите телефон полностью';
     if (!body.activePlaces || Number(body.activePlaces) < 1) return 'Укажите количество мест';
     if (Number(body.activePlaces) > 50) return 'Максимум 50 активных мест';
     return null;
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
                     {
                         name: body.name.trim(),
                         address: body.address.trim(),
-                        phone: body.phone.trim(),
+                        phone: normalizePhone(body.phone),
                         active_places: Number(body.activePlaces)
                     }
                 ]

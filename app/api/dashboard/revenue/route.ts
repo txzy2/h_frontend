@@ -1,11 +1,11 @@
 // app/api/dashboard/revenue/route.ts
 //
 // Серия выручки за выбранный период для графика на главной.
+// Данные берутся из основного API (h_main_backend).
 // Доступ — по праву view.org.finance (SuperUser / Admin).
-// Пока отдаём демонстрационные данные с небольшой задержкой,
-// чтобы было видно прелоадер (убрать после интеграции с основным API).
 
 import {NextRequest, NextResponse} from 'next/server';
+import axios from 'axios';
 import {
     resolveSession,
     sessionFailureResponse,
@@ -14,12 +14,10 @@ import {
 } from '@/lib/auth/session.service';
 import {checkUserPermission} from '@/lib/services/permission.service';
 import {PERMISSIONS} from '@/lib/auth/permissions.constants';
-import {getMockRevenuePeriod} from '@/lib/mock/dashboard.mock';
 import {DEFAULT_REVENUE_PERIOD, isRevenuePeriodKey} from '@/lib/dashboard/periods';
-import {RevenuePeriodResponse} from '@/types/dashboard';
+import {RevenuePeriod, RevenuePeriodResponse} from '@/types/dashboard';
 
-/** Имитация задержки основного API (мс) */
-const MOCK_DELAY_MS = 600;
+const MAIN_API_URL = process.env.MAIN_API_URL;
 
 export async function GET(request: NextRequest): Promise<NextResponse<RevenuePeriodResponse>> {
     const session = await resolveSession(request);
@@ -59,12 +57,43 @@ export async function GET(request: NextRequest): Promise<NextResponse<RevenuePer
         return respond<RevenuePeriodResponse>({success: false, data: 'Неизвестный период'}, 400);
     }
 
-    const period = getMockRevenuePeriod(periodParam);
-    if (!period) {
-        return respond<RevenuePeriodResponse>({success: false, data: 'Нет данных'}, 404);
+    const refresh = request.nextUrl.searchParams.get('refresh');
+
+    try {
+        const {data} = await axios.get<{success: true; data: RevenuePeriod}>(
+            `${MAIN_API_URL}/dashboard/revenue`,
+            {
+                params: {
+                    period: periodParam,
+                    ...(refresh ? {refresh} : {})
+                },
+                headers: {Authorization: `Bearer ${session.accessToken}`}
+            }
+        );
+
+        return respond<RevenuePeriodResponse>({success: true, data: data.data});
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            const status = error.response?.status ?? 502;
+
+            if (status === 401) {
+                return sessionRevokedResponse<RevenuePeriodResponse>(
+                    {success: false, data: 'Session expired or invalid'},
+                    401
+                );
+            }
+
+            const message =
+                error.response?.data?.message ??
+                error.response?.data?.data ??
+                'Ошибка загрузки выручки';
+
+            return respond<RevenuePeriodResponse>({success: false, data: message}, status);
+        }
+
+        return respond<RevenuePeriodResponse>(
+            {success: false, data: 'Internal server error'},
+            500
+        );
     }
-
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY_MS));
-
-    return respond<RevenuePeriodResponse>({success: true, data: period});
 }

@@ -22,10 +22,7 @@ import {
     MAX_LOGO_BYTES,
     normalizeHexColor
 } from '@/lib/org/branding.constants';
-import {
-    OrganizationAppearanceResponse,
-    UpdateOrganizationAppearanceResponse
-} from '@/types/org';
+import {OrganizationAppearanceResponse, UpdateOrganizationAppearanceResponse} from '@/types/org';
 
 const MAIN_API_URL = process.env.MAIN_API_URL;
 const appearanceService = new AppearanceService(db);
@@ -154,7 +151,9 @@ export async function PUT(
 ): Promise<NextResponse<UpdateOrganizationAppearanceResponse>> {
     const session = await resolveSession(request);
     if (!session.ok) {
-        return sessionFailureResponse(session) as NextResponse<UpdateOrganizationAppearanceResponse>;
+        return sessionFailureResponse(
+            session
+        ) as NextResponse<UpdateOrganizationAppearanceResponse>;
     }
 
     const respond = sessionResponder(session);
@@ -226,7 +225,10 @@ export async function PUT(
                     );
                 }
                 return respond<UpdateOrganizationAppearanceResponse>(
-                    {success: false, data: 'Логотип может изменить только администратор организации'},
+                    {
+                        success: false,
+                        data: 'Логотип может изменить только администратор организации'
+                    },
                     403
                 );
             }

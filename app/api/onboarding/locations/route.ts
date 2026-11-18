@@ -8,6 +8,7 @@ import {
 
 import {db} from '@/lib/db-client';
 import {OnboardingService} from '@/lib/services/onboarding.service';
+import {isValidPhone, normalizePhone} from '@/lib/phone';
 
 const onboardingService = new OnboardingService(db);
 
@@ -30,6 +31,9 @@ function validateLocations(body: LocationsBody): string | null {
     for (const loc of body.locations) {
         if (!loc.name?.trim()) return 'Введите название точки';
         if (!loc.address?.trim()) return 'Введите адрес точки';
+        if (loc.phone?.trim() && !isValidPhone(loc.phone)) {
+            return 'Введите телефон точки полностью';
+        }
         if (!loc.activePlaces || loc.activePlaces < 1) return 'Укажите количество мест';
     }
     return null;
@@ -47,7 +51,15 @@ export async function POST(request: NextRequest) {
         const validationError = validateLocations(body);
         if (validationError) return respond({success: false, data: validationError}, 400);
 
-        await onboardingService.saveLocations(body.draftId, body.locations);
+        await onboardingService.saveLocations(
+            body.draftId,
+            body.locations.map(location => ({
+                ...location,
+                phone: location.phone?.trim()
+                    ? normalizePhone(location.phone)
+                    : undefined
+            }))
+        );
 
         return respond({success: true, data: 'Точки сохранены'});
     } catch {

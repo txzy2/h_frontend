@@ -58,24 +58,52 @@ export function AdminDashboard({user}: {user: UserData}) {
         };
     }, []);
 
-    const fetchSummary = useCallback(async () => {
-        const {data} = await axios.get<DashboardSummaryResponse>('/api/dashboard/summary');
+    const fetchSummary = useCallback(async (force = false) => {
+        const {data} = await axios.get<DashboardSummaryResponse>('/api/dashboard/summary', {
+            params: force ? {refresh: '1'} : undefined
+        });
         if (isMountedRef.current && data.success) setSummary(data.data);
     }, []);
 
+    const fetchRevenue = useCallback(
+        async (force = false) => {
+            const {data} = await axios.get<RevenuePeriodResponse>('/api/dashboard/revenue', {
+                params: {
+                    period: periodKey,
+                    ...(force ? {refresh: '1'} : {})
+                }
+            });
+            if (isMountedRef.current && data.success) setRevenuePeriod(data.data);
+        },
+        [periodKey]
+    );
+
     const handleRefresh = useCallback(async () => {
         setIsRefreshing(true);
+        setIsRevenueLoading(true);
         try {
-            await fetchSummary();
+            await Promise.all([fetchSummary(true), fetchRevenue(true)]);
             toast.success('Статистика обновлена');
         } catch {
             toast.error('Не удалось обновить статистику');
         } finally {
-            if (isMountedRef.current) setIsRefreshing(false);
+            if (isMountedRef.current) {
+                setIsRefreshing(false);
+                setIsRevenueLoading(false);
+            }
         }
-    }, [fetchSummary]);
+    }, [fetchSummary, fetchRevenue]);
 
-    // Сводка для главной (пока демо-данные с бэкенда Next.js)
+    useEffect(() => {
+        const handleBookingCreated = () => {
+            void handleRefresh();
+        };
+
+        window.addEventListener('booking-created', handleBookingCreated);
+        return () => window.removeEventListener('booking-created', handleBookingCreated);
+    }, [handleRefresh]);
+
+    // Сводка для главной
     useEffect(() => {
         let cancelled = false;
 
@@ -108,10 +136,7 @@ export function AdminDashboard({user}: {user: UserData}) {
 
         (async () => {
             try {
-                const {data} = await axios.get<RevenuePeriodResponse>('/api/dashboard/revenue', {
-                    params: {period: periodKey}
-                });
-                if (!cancelled && data.success) setRevenuePeriod(data.data);
+                await fetchRevenue();
             } catch {
                 // ignore — останется предыдущая серия
             } finally {
@@ -122,7 +147,7 @@ export function AdminDashboard({user}: {user: UserData}) {
         return () => {
             cancelled = true;
         };
-    }, [periodKey]);
+    }, [fetchRevenue]);
 
     const revenueStats = useMemo(() => {
         const points = revenuePeriod?.points ?? [];
@@ -158,11 +183,6 @@ export function AdminDashboard({user}: {user: UserData}) {
                 </div>
 
                 <div className='flex flex-wrap items-center gap-2 text-xs text-app-subtle'>
-                    {summary?.isMock && (
-                        <span className='rounded-full border border-brand/30 bg-brand/10 px-2.5 py-1 text-[11px] font-medium text-brand'>
-                            Демо-данные
-                        </span>
-                    )}
                     {summary && (
                         <span className='hidden sm:inline'>
                             обновлено {formatDateTime(summary.generatedAt)}

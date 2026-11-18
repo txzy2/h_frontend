@@ -45,7 +45,7 @@ export default function DashboardLayout({children}: {children: React.ReactNode})
                 <main className='flex-1 overflow-auto pb-20 lg:pb-0'>{children}</main>
             </div>
 
-            {/* Быстрое создание брони — только Manager / Admin / SuperUser */}
+            {/* Быстрое создание брони — только Manager */}
             <QuickBookingButton />
         </div>
     );

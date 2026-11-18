@@ -95,8 +95,6 @@ export interface HeatmapData {
 
 export interface DashboardSummary {
     generatedAt: string;
-    /** true — данные демонстрационные (пока нет интеграции с основным API) */
-    isMock: boolean;
     kpi: DashboardKpi;
     loadByHour: HourLoadPoint[];
     heatmap: HeatmapData;
@@ -117,6 +115,8 @@ export type ShiftBookingStatus = 'Завершена' | 'За столом' | '�
 export interface ShiftBooking {
     id: string;
     time: string;
+    endTime: string;
+    durationMinutes: number;
     locationName: string;
     guestName: string;
     guests: number;
@@ -137,7 +137,6 @@ export interface ShiftStaff {
 
 export interface ManagerShiftSummary {
     generatedAt: string;
-    isMock: boolean;
     kpi: {
         bookingsToday: number;
         guestsToday: number;
@@ -153,10 +152,26 @@ export interface ManagerShiftSummary {
     personal: {
         bookings: number;
         guests: number;
+        revenue: number;
+        averageCheck: number;
         cancellations: number;
         averageVisitMinutes: number;
         /** Цель за смену, броней */
         goal: number;
+        shift: {
+            id: number | null;
+            isActive: boolean;
+            startedAt: string | null;
+            endedAt: string | null;
+            durationMinutes: number;
+            bookings: number;
+            guests: number;
+            revenue: number;
+            averageCheck: number;
+            cancellations: number;
+            averageVisitMinutes: number;
+            goal: number;
+        };
     };
     bookings: ShiftBooking[];
     loadByHour: HourLoadPoint[];

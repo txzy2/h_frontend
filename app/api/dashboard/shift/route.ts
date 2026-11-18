@@ -1,10 +1,11 @@
 // app/api/dashboard/shift/route.ts
 //
 // Операционная сводка смены для дашборда менеджера.
+// Данные берутся из основного API (h_main_backend).
 // Доступ — по праву view.org.reservations (Manager / Admin / SuperUser).
-// Пока отдаём демонстрационные данные (lib/mock/manager-dashboard.mock.ts).
 
 import {NextRequest, NextResponse} from 'next/server';
+import axios from 'axios';
 import {
     resolveSession,
     sessionFailureResponse,
@@ -13,11 +14,9 @@ import {
 } from '@/lib/auth/session.service';
 import {checkUserPermission} from '@/lib/services/permission.service';
 import {PERMISSIONS} from '@/lib/auth/permissions.constants';
-import {getMockManagerShift} from '@/lib/mock/manager-dashboard.mock';
-import {ManagerShiftResponse} from '@/types/dashboard';
+import {ManagerShiftResponse, ManagerShiftSummary} from '@/types/dashboard';
 
-/** Имитация задержки основного API (мс) */
-const MOCK_DELAY_MS = 500;
+const MAIN_API_URL = process.env.MAIN_API_URL;
 
 export async function GET(request: NextRequest): Promise<NextResponse<ManagerShiftResponse>> {
     const session = await resolveSession(request);
@@ -51,7 +50,40 @@ export async function GET(request: NextRequest): Promise<NextResponse<ManagerShi
         );
     }
 
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY_MS));
+    const refresh = request.nextUrl.searchParams.get('refresh');
 
-    return respond<ManagerShiftResponse>({success: true, data: getMockManagerShift()});
+    try {
+        const {data} = await axios.get<{success: true; data: ManagerShiftSummary}>(
+            `${MAIN_API_URL}/dashboard/shift`,
+            {
+                headers: {Authorization: `Bearer ${session.accessToken}`},
+                params: refresh ? {refresh} : undefined
+            }
+        );
+
+        return respond<ManagerShiftResponse>({success: true, data: data.data});
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            const status = error.response?.status ?? 502;
+
+            if (status === 401) {
+                return sessionRevokedResponse<ManagerShiftResponse>(
+                    {success: false, data: 'Session expired or invalid'},
+                    401
+                );
+            }
+
+            const message =
+                error.response?.data?.message ??
+                error.response?.data?.data ??
+                'Ошибка загрузки данных смены';
+
+            return respond<ManagerShiftResponse>({success: false, data: message}, status);
+        }
+
+        return respond<ManagerShiftResponse>(
+            {success: false, data: 'Internal server error'},
+            500
+        );
+    }
 }

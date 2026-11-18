@@ -8,6 +8,7 @@ import {
 
 import {db} from '@/lib/db-client';
 import {OnboardingService} from '@/lib/services/onboarding.service';
+import {isValidPhone, normalizePhone} from '@/lib/phone';
 
 const onboardingService = new OnboardingService(db);
 
@@ -30,6 +31,7 @@ function validateOrg(body: OrgBody): string | null {
     if (!/^\d{9}$/.test(body.kpp)) return 'КПП должен содержать 9 цифр';
     if (!body.director?.trim()) return 'Введите ФИО директора';
     if (!body.phoneNumber?.trim()) return 'Введите номер телефона';
+    if (!isValidPhone(body.phoneNumber)) return 'Введите телефон полностью';
     if (!body.plan?.trim()) return 'Выберите тарифный план';
     return null;
 }
@@ -51,7 +53,7 @@ export async function POST(request: NextRequest) {
             inn: body.inn,
             kpp: body.kpp,
             director: body.director,
-            phoneNumber: body.phoneNumber,
+            phoneNumber: normalizePhone(body.phoneNumber),
             plan: body.plan
         });
 

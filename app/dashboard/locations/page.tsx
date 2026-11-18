@@ -9,7 +9,9 @@ import {useAuthStore} from '@/stores/auth.store';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
+import {PhoneInput} from '@/components/ui/phone-input';
 import {Badge} from '@/components/ui/badge';
+import {formatPhone, isValidPhone, normalizePhone} from '@/lib/phone';
 import {Skeleton} from '@/components/ui/skeleton';
 import {
     Breadcrumb,
@@ -54,7 +56,7 @@ function validateForm(form: LocationForm): LocationErrors {
     if (!form.name.trim()) errors.name = 'Введите название';
     if (!form.address.trim()) errors.address = 'Введите адрес';
     if (!form.phone.trim()) errors.phone = 'Введите телефон';
-    else if (!/^\d{10,11}$/.test(form.phone)) errors.phone = '10 или 11 цифр';
+    else if (!isValidPhone(form.phone)) errors.phone = 'Введите телефон полностью';
     if (!form.activePlaces || Number(form.activePlaces) < 1) errors.activePlaces = 'Мин. 1';
     else if (Number(form.activePlaces) > 50) errors.activePlaces = 'Макс. 50';
     return errors;
@@ -152,7 +154,7 @@ export default function LocationsPage() {
             const {data} = await axios.post('/api/locations', {
                 name: form.name.trim(),
                 address: form.address.trim(),
-                phone: form.phone.trim(),
+                phone: normalizePhone(form.phone),
                 activePlaces: Number(form.activePlaces)
             });
 
@@ -271,12 +273,11 @@ export default function LocationsPage() {
 
                         <div className='grid grid-cols-2 gap-3'>
                             <Field label='Телефон' error={formErrors.phone}>
-                                <Input
-                                    placeholder='79991234567'
+                                <PhoneInput
+                                    placeholder='+7 (999) 123-45-67'
                                     disabled={saving}
                                     value={form.phone}
-                                    maxLength={11}
-                                    onChange={e => updateForm('phone', e.target.value)}
+                                    onChange={value => updateForm('phone', value)}
                                     className={inputCls(formErrors.phone)}
                                 />
                             </Field>
@@ -408,7 +409,10 @@ export default function LocationsPage() {
                                         <div className='space-y-2'>
                                             <InfoRow icon={MapPin} text={location.address} />
                                             {location.phone && (
-                                                <InfoRow icon={Phone} text={location.phone} />
+                                                <InfoRow
+                                                    icon={Phone}
+                                                    text={formatPhone(location.phone)}
+                                                />
                                             )}
                                             <InfoRow
                                                 icon={Armchair}

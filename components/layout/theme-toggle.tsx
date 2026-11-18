@@ -34,7 +34,10 @@ export function ThemeToggle({className, side = 'bottom'}: ThemeToggleProps) {
                         {isDark ? <Sun size={16} /> : <Moon size={16} />}
                     </button>
                 </TooltipTrigger>
-                <TooltipContent side={side} className='border-app-border bg-surface-2 text-app-fg/90'>
+                <TooltipContent
+                    side={side}
+                    className='border-app-border bg-surface-2 text-app-fg/90'
+                >
                     {isDark ? 'Светлая тема' : 'Тёмная тема'}
                 </TooltipContent>
             </Tooltip>

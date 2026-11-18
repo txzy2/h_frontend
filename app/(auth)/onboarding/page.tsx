@@ -8,6 +8,8 @@ import axios from 'axios';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
+import {PhoneInput} from '@/components/ui/phone-input';
+import {isValidPhone, normalizePhone} from '@/lib/phone';
 import {Loader2, Building2, MapPin, CheckCircle2, Plus, Trash2} from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -40,7 +42,7 @@ interface OrgErrors {
 
 interface LocationErrors {
     general?: string;
-    items?: {name?: string; address?: string; activePlaces?: string}[];
+    items?: {name?: string; address?: string; phone?: string; activePlaces?: string}[];
 }
 
 const PLANS = [
@@ -66,15 +68,19 @@ function validateOrg(form: OrgForm): OrgErrors {
     else if (!/^\d{9}$/.test(form.kpp)) errors.kpp = '9 цифр';
     if (!form.director.trim()) errors.director = 'Введите ФИО директора';
     if (!form.phoneNumber.trim()) errors.phoneNumber = 'Введите телефон';
+    else if (!isValidPhone(form.phoneNumber)) errors.phoneNumber = 'Введите телефон полностью';
     if (!form.plan) errors.plan = 'Выберите тариф';
     return errors;
 }
 
 function validateLocations(locations: LocationForm[]): LocationErrors {
     const items = locations.map(loc => {
-        const e: {name?: string; address?: string; activePlaces?: string} = {};
+        const e: {name?: string; address?: string; phone?: string; activePlaces?: string} = {};
         if (!loc.name.trim()) e.name = 'Введите название';
         if (!loc.address.trim()) e.address = 'Введите адрес';
+        if (loc.phone.trim() && !isValidPhone(loc.phone)) {
+            e.phone = 'Введите телефон полностью';
+        }
         if (!loc.activePlaces || Number(loc.activePlaces) < 1) e.activePlaces = 'Мин. 1';
         return e;
     });
@@ -200,7 +206,8 @@ export default function Onboarding() {
         try {
             const {data} = await axios.post('/api/onboarding/organization', {
                 draftId,
-                ...orgForm
+                ...orgForm,
+                phoneNumber: normalizePhone(orgForm.phoneNumber)
             });
             if (data.success) {
                 setStep(3);
@@ -256,7 +263,7 @@ export default function Onboarding() {
                 locations: locations.map(l => ({
                     ...l,
                     activePlaces: Number(l.activePlaces),
-                    phone: l.phone || undefined
+                    phone: l.phone.trim() ? normalizePhone(l.phone) : undefined
                 }))
             });
 
@@ -476,14 +483,13 @@ export default function Onboarding() {
                             </Field>
 
                             <Field label='Телефон организации' error={orgErrors.phoneNumber}>
-                                <Input
+                                <PhoneInput
                                     name='phoneNumber'
-                                    placeholder='79991234567'
+                                    placeholder='+7 (999) 123-45-67'
                                     disabled={orgLoading}
                                     value={orgForm.phoneNumber}
-                                    maxLength={11}
-                                    onChange={e => {
-                                        setOrgForm(p => ({...p, phoneNumber: e.target.value}));
+                                    onChange={value => {
+                                        setOrgForm(p => ({...p, phoneNumber: value}));
                                         if (orgErrors.phoneNumber)
                                             setOrgErrors(p => ({...p, phoneNumber: undefined}));
                                     }}
@@ -636,15 +642,19 @@ export default function Onboarding() {
                                             />
                                         </Field>
                                         <div className='grid grid-cols-2 gap-3'>
-                                            <Field label='Телефон (опционально)'>
-                                                <Input
-                                                    placeholder='79991234567'
+                                            <Field
+                                                label='Телефон (опционально)'
+                                                error={locErrors.items?.[i]?.phone}
+                                            >
+                                                <PhoneInput
+                                                    placeholder='+7 (999) 123-45-67'
                                                     value={loc.phone}
-                                                    maxLength={11}
-                                                    onChange={e =>
-                                                        updateLocation(i, 'phone', e.target.value)
+                                                    onChange={value =>
+                                                        updateLocation(i, 'phone', value)
                                                     }
-                                                    className={inputCls()}
+                                                    className={inputCls(
+                                                        locErrors.items?.[i]?.phone
+                                                    )}
                                                 />
                                             </Field>
                                             <Field
