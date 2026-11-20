@@ -14,7 +14,9 @@ import {
     PanelLeftOpen,
     Building2,
     Palette,
-    ShieldCheck
+    ShieldCheck,
+    LayoutGrid,
+    UsersRound
 } from 'lucide-react';
 import {useRouter, usePathname} from 'next/navigation';
 import {useTheme} from 'next-themes';
@@ -41,6 +43,18 @@ const NAV_ITEMS = [
     {href: '/dashboard/locations', label: 'Точки', icon: MapPin}
 ];
 
+const ADMIN_TEAM_ITEM = {
+    href: '/dashboard/team',
+    label: 'Команда',
+    icon: UsersRound
+};
+
+const ADMIN_FLOOR_PLAN_ITEM = {
+    href: '/dashboard/floor-plan',
+    label: 'План зала',
+    icon: LayoutGrid
+};
+
 function getAvatarUrl(seed: string): string {
     return `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(seed)}`;
 }
@@ -58,6 +72,10 @@ export function Sidebar({user, onLogout}: SidebarProps) {
     const router = useRouter();
     const pathname = usePathname();
     const {orgName, logoUrl} = useBranding();
+    const isAdmin = user.role === 'Admin' || user.role === 'SuperUser';
+    const navItems = isAdmin
+        ? [...NAV_ITEMS, ADMIN_TEAM_ITEM, ADMIN_FLOOR_PLAN_ITEM]
+        : NAV_ITEMS;
     const [clock, setClock] = useState(() => new Date());
     const [collapsed, setCollapsed] = useState(() => {
         if (typeof window === 'undefined') return false;
@@ -164,7 +182,7 @@ export function Sidebar({user, onLogout}: SidebarProps) {
             {/* Навигация */}
             <nav className='flex-1 space-y-0.5 overflow-y-auto px-2'>
                 <TooltipProvider delayDuration={0}>
-                    {NAV_ITEMS.map(item => {
+                    {navItems.map(item => {
                         const isActive =
                             pathname === item.href ||
                             (item.href !== '/dashboard' && pathname.startsWith(item.href));
@@ -339,6 +357,10 @@ export function MobileNav({user, onLogout}: SidebarProps) {
     const router = useRouter();
     const pathname = usePathname();
     const {orgName, logoUrl} = useBranding();
+    const isAdmin = user.role === 'Admin' || user.role === 'SuperUser';
+    const mobileNavItems = isAdmin
+        ? [...MOBILE_NAV, ADMIN_TEAM_ITEM, ADMIN_FLOOR_PLAN_ITEM]
+        : MOBILE_NAV;
 
     return (
         <>
@@ -372,7 +394,7 @@ export function MobileNav({user, onLogout}: SidebarProps) {
             {/* Нижний таббар */}
             <nav className='fixed inset-x-0 bottom-0 z-50 border-t border-app-border bg-surface/90 backdrop-blur-xl lg:hidden'>
                 <div className='flex h-16 items-center justify-around px-2'>
-                    {MOBILE_NAV.map(item => {
+                    {mobileNavItems.map(item => {
                         const isActive =
                             pathname === item.href ||
                             (item.href !== '/dashboard' && pathname.startsWith(item.href));

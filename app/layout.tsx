@@ -1,6 +1,7 @@
 import {ThemeProvider} from '@/components/theme-provider';
 import {SessionProvider} from '@/components/providers/session-provider';
 import {BrandingProvider} from '@/components/providers/branding-provider';
+import {ConfirmProvider} from '@/components/ui/confirm-dialog';
 import type {Metadata} from 'next';
 import {Geist, Geist_Mono} from 'next/font/google';
 import './globals.css';
@@ -31,7 +32,9 @@ export default function RootLayout({
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
                 <ThemeProvider>
                     <SessionProvider>
-                        <BrandingProvider>{children}</BrandingProvider>
+                        <BrandingProvider>
+                            <ConfirmProvider>{children}</ConfirmProvider>
+                        </BrandingProvider>
                     </SessionProvider>
                 </ThemeProvider>
                 <Toaster theme='dark' />

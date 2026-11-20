@@ -61,15 +61,21 @@ model DraftLocation {
 
 /// Кастомизация интерфейса организации (цвета, логотип)
 model OrganizationAppearance {
-  id          String   @id @default(uuid())
-  orgId       Int      @unique @map("org_id")
-  brandColor  String   @default("#f59e0b") @map("brand_color") @db.VarChar(7)
-  headerColor String?  @map("header_color") @db.VarChar(7)
-  logo        Bytes?
-  logoMime    String?  @map("logo_mime") @db.VarChar(50)
-  updatedBy   String   @map("updated_by")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(uuid())
+  orgId        Int      @unique @map("org_id")
+  brandColor   String   @default("#f59e0b") @map("brand_color") @db.VarChar(7)
+  headerColor  String?  @map("header_color") @db.VarChar(7)
+  /// light | dark | system — тема по умолчанию для сотрудников
+  defaultTheme String   @default("system") @map("default_theme") @db.VarChar(10)
+  /// {expected, seated, completed, cancelled} — цвета статусов броней
+  statusColors Json?    @map("status_colors")
+  /// Палитра графиков: 5 hex-цветов
+  chartColors  Json?    @map("chart_colors")
+  logo         Bytes?
+  logoMime     String?  @map("logo_mime") @db.VarChar(50)
+  updatedBy    String   @map("updated_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@map("organization_appearance")
 }

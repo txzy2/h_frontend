@@ -23,12 +23,17 @@ import {
 } from 'lucide-react';
 import {formatDateTime, formatDuration, formatMoney, formatNumber} from '@/lib/format';
 import {formatPhone} from '@/lib/phone';
+import {
+    bookingStatusKeyFromLabel,
+    statusBadgeStyle,
+    statusButtonStyle,
+    type BookingStatusKey
+} from '@/lib/org/status';
 import {BookingDetailsModal} from './booking-details-modal';
 import {
     ManagerShiftResponse,
     ManagerShiftSummary,
     ShiftBooking,
-    ShiftBookingStatus,
     ShiftStaff
 } from '@/types/dashboard';
 import type {BookingDetailsResponse} from '@/types/bookings';
@@ -36,17 +41,9 @@ import {UserData} from '@/types/auth';
 import {toast} from 'sonner';
 import axios from 'axios';
 
-const BOOKING_STATUS_STYLES: Record<ShiftBookingStatus, string> = {
-    Завершена: 'bg-app-fg/10 text-app-muted',
-    'За столом': 'bg-emerald-500/10 text-emerald-400',
-    Ожидается: 'bg-brand/10 text-brand',
-    Отменена: 'bg-red-500/10 text-red-400'
-};
-
-const STAFF_STATUS_STYLES: Record<ShiftStaff['status'], string> = {
-    'На смене': 'bg-emerald-500/10 text-emerald-400',
-    Заканчивает: 'bg-brand/10 text-brand',
-    Скоро: 'bg-app-fg/10 text-app-muted'
+const STAFF_STATUS_KEY: Partial<Record<ShiftStaff['status'], BookingStatusKey>> = {
+    'На смене': 'seated',
+    Заканчивает: 'expected'
 };
 
 function formatShiftClock(value: string | null): string {
@@ -547,12 +544,12 @@ export function ManagerDashboard({user}: {user: UserData}) {
                                                         {booking.time}–{booking.endTime}
                                                     </span>
                                                     <span
-                                                        className={[
-                                                            'whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium',
-                                                            BOOKING_STATUS_STYLES[
+                                                        className='whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium'
+                                                        style={statusBadgeStyle(
+                                                            bookingStatusKeyFromLabel(
                                                                 booking.status
-                                                            ]
-                                                        ].join(' ')}
+                                                            )
+                                                        )}
                                                     >
                                                         {booking.status}
                                                     </span>
@@ -578,7 +575,8 @@ export function ManagerDashboard({user}: {user: UserData}) {
                                                         event.stopPropagation();
                                                         void handleStartBooking(booking);
                                                     }}
-                                                    className='flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 transition-colors hover:bg-emerald-500/20 disabled:cursor-wait disabled:opacity-50'
+                                                    style={statusButtonStyle('seated')}
+                                                    className='flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg transition-all hover:opacity-80 disabled:cursor-wait disabled:opacity-50'
                                                 >
                                                     {startingBookingId ===
                                                     Number(booking.id) ? (
@@ -724,8 +722,19 @@ export function ManagerDashboard({user}: {user: UserData}) {
                                                   <span
                                                       className={[
                                                           'shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium',
-                                                          STAFF_STATUS_STYLES[person.status]
+                                                          STAFF_STATUS_KEY[person.status]
+                                                              ? ''
+                                                              : 'bg-app-fg/10 text-app-muted'
                                                       ].join(' ')}
+                                                      style={
+                                                          STAFF_STATUS_KEY[person.status]
+                                                              ? statusBadgeStyle(
+                                                                    STAFF_STATUS_KEY[
+                                                                        person.status
+                                                                    ]!
+                                                                )
+                                                              : undefined
+                                                      }
                                                   >
                                                       {person.status}
                                                   </span>

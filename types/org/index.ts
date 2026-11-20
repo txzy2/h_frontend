@@ -1,6 +1,6 @@
 // types/org/index.ts
 import type {ApiResponse} from '@/types/auth';
-import type {OrgTheme} from '@/lib/org/branding.constants';
+import type {OrgTheme, StatusColors} from '@/lib/org/branding.constants';
 
 export interface Organization {
     id: number;
@@ -31,12 +31,15 @@ export type OrganizationResponse = ApiResponse<Organization>;
 // Кастомизация интерфейса организации
 // ============================================================
 
-export type {OrgTheme};
+export type {OrgTheme, StatusColors};
 
 export interface OrganizationAppearance {
     orgId: number;
     brandColor: string;
     headerColor: string | null;
+    defaultTheme: OrgTheme;
+    statusColors: StatusColors;
+    chartColors: string[];
     hasLogo: boolean;
     logoVersion: string | null;
 }
@@ -44,6 +47,9 @@ export interface OrganizationAppearance {
 export interface UpdateOrganizationAppearanceInput {
     brandColor: string;
     headerColor: string | null;
+    defaultTheme?: OrgTheme;
+    statusColors?: StatusColors;
+    chartColors?: string[];
     /** data:image/png;base64,... — новый логотип */
     logoDataUrl?: string;
     removeLogo?: boolean;

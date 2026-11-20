@@ -17,10 +17,17 @@ import {AppearanceService} from '@/lib/services/appearance.service';
 import {checkUserPermission} from '@/lib/services/permission.service';
 import {PERMISSIONS} from '@/lib/auth/permissions.constants';
 import {
+    DEFAULT_CHART_COLORS,
+    DEFAULT_ORG_THEME,
+    DEFAULT_STATUS_COLORS,
+    isOrgTheme,
     isValidHexColor,
     LOGO_MIME_TYPES,
     MAX_LOGO_BYTES,
-    normalizeHexColor
+    normalizeHexColor,
+    STATUS_COLOR_KEYS,
+    type OrgTheme,
+    type StatusColors
 } from '@/lib/org/branding.constants';
 import {OrganizationAppearanceResponse, UpdateOrganizationAppearanceResponse} from '@/types/org';
 
@@ -49,10 +56,36 @@ async function getOrg(accessToken: string): Promise<{id: number; name: string} |
 type ParsedInput = {
     brandColor: string;
     headerColor: string | null;
+    defaultTheme: OrgTheme;
+    statusColors: StatusColors;
+    chartColors: string[];
     logo?: Buffer;
     logoMime?: string;
     removeLogo?: boolean;
 };
+
+function parseStatusColors(value: unknown): StatusColors | null {
+    if (value === undefined) return {...DEFAULT_STATUS_COLORS};
+    if (!value || typeof value !== 'object') return null;
+
+    const raw = value as Record<string, unknown>;
+    const result = {...DEFAULT_STATUS_COLORS};
+
+    for (const key of STATUS_COLOR_KEYS) {
+        if (!isValidHexColor(raw[key])) return null;
+        result[key] = normalizeHexColor(raw[key]);
+    }
+
+    return result;
+}
+
+function parseChartColors(value: unknown): string[] | null {
+    if (value === undefined) return [...DEFAULT_CHART_COLORS];
+    if (!Array.isArray(value) || value.length !== DEFAULT_CHART_COLORS.length) return null;
+    if (!value.every(isValidHexColor)) return null;
+
+    return value.map(normalizeHexColor);
+}
 
 function parseInput(body: unknown): {ok: true; value: ParsedInput} | {ok: false; error: string} {
     if (!body || typeof body !== 'object') {
@@ -71,6 +104,27 @@ function parseInput(body: unknown): {ok: true; value: ParsedInput} | {ok: false;
             return {ok: false, error: 'Некорректный цвет шапки'};
         }
         headerColor = normalizeHexColor(raw.headerColor);
+    }
+
+    const defaultTheme: OrgTheme =
+        raw.defaultTheme === undefined
+            ? DEFAULT_ORG_THEME
+            : isOrgTheme(raw.defaultTheme)
+              ? raw.defaultTheme
+              : DEFAULT_ORG_THEME;
+
+    if (raw.defaultTheme !== undefined && !isOrgTheme(raw.defaultTheme)) {
+        return {ok: false, error: 'Некорректная тема по умолчанию'};
+    }
+
+    const statusColors = parseStatusColors(raw.statusColors);
+    if (!statusColors) {
+        return {ok: false, error: 'Некорректные цвета статусов'};
+    }
+
+    const chartColors = parseChartColors(raw.chartColors);
+    if (!chartColors) {
+        return {ok: false, error: 'Некорректная палитра графиков'};
     }
 
     let logo: Buffer | undefined;
@@ -104,6 +158,9 @@ function parseInput(body: unknown): {ok: true; value: ParsedInput} | {ok: false;
         value: {
             brandColor: normalizeHexColor(raw.brandColor),
             headerColor,
+            defaultTheme,
+            statusColors,
+            chartColors,
             logo,
             logoMime,
             removeLogo: raw.removeLogo === true

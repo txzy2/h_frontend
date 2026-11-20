@@ -76,3 +76,69 @@ export async function POST(request: NextRequest) {
         return respond({success: false, data: 'Internal server error'}, 500);
     }
 }
+
+interface UpdateLocationBody extends LocationBody {
+    id?: number;
+    status?: string;
+}
+
+export async function PATCH(request: NextRequest) {
+    const session = await resolveSession(request);
+    if (!session.ok) return sessionFailureResponse(session);
+
+    const respond = sessionResponder(session);
+
+    if (!['Admin', 'SuperUser'].includes(session.payload.role)) {
+        return respond({success: false, data: 'Недостаточно прав для редактирования точки'}, 403);
+    }
+
+    try {
+        const body: UpdateLocationBody = await request.json();
+        const locationId = Number(body.id);
+
+        if (!Number.isInteger(locationId) || locationId < 1) {
+            return respond({success: false, data: 'Неверный идентификатор точки'}, 400);
+        }
+
+        const validationError = validateLocation(body);
+        if (validationError) return respond({success: false, data: validationError}, 400);
+
+        const allowedStatuses = ['Active', 'Inactive', 'Pending', 'Closed'];
+        if (body.status !== undefined && !allowedStatuses.includes(body.status)) {
+            return respond({success: false, data: 'Неверный статус точки'}, 400);
+        }
+
+        const headers = {headers: {Authorization: `Bearer ${session.accessToken}`}};
+        const {data: orgData} = await axios.get(`${MAIN_API_URL}/orgs`, headers);
+        const locations = orgData?.data?.locations ?? [];
+
+        if (!locations.some((location: {id: number}) => location.id === locationId)) {
+            return respond({success: false, data: 'Точка не найдена'}, 404);
+        }
+
+        const {data} = await axios.patch(
+            `${MAIN_API_URL}/locations/${locationId}`,
+            {
+                name: body.name.trim(),
+                address: body.address.trim(),
+                phone: normalizePhone(body.phone),
+                active_places: Number(body.activePlaces),
+                ...(body.status ? {status: body.status} : {})
+            },
+            headers
+        );
+
+        return respond({success: true, data: data.data});
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            const status = error.response?.status ?? 500;
+            const message =
+                error.response?.data?.error ??
+                error.response?.data?.message ??
+                error.response?.data?.data ??
+                'Не удалось обновить точку';
+            return respond({success: false, data: message}, status);
+        }
+        return respond({success: false, data: 'Internal server error'}, 500);
+    }
+}

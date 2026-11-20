@@ -39,7 +39,12 @@ import {UserData} from '@/types/auth';
 import {toast} from 'sonner';
 import axios from 'axios';
 
-const DONUT_COLORS = ['var(--brand)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)'];
+const DONUT_COLORS = [
+    'var(--chart-1)',
+    'var(--chart-2)',
+    'var(--chart-3)',
+    'var(--chart-4)'
+];
 
 /** Дашборд администратора: выручка, финансы, прибыльность точек */
 export function AdminDashboard({user}: {user: UserData}) {

@@ -1,11 +1,22 @@
 // lib/services/appearance.service.ts
-import {DEFAULT_BRAND_COLOR} from '@/lib/org/branding.constants';
+import {
+    DEFAULT_BRAND_COLOR,
+    DEFAULT_ORG_THEME,
+    isOrgTheme,
+    normalizeChartColors,
+    normalizeStatusColors,
+    type OrgTheme,
+    type StatusColors
+} from '@/lib/org/branding.constants';
 import {DB} from '../db-client';
 
 export interface AppearanceData {
     orgId: number;
     brandColor: string;
     headerColor: string | null;
+    defaultTheme: OrgTheme;
+    statusColors: StatusColors;
+    chartColors: string[];
     hasLogo: boolean;
     logoVersion: string | null;
 }
@@ -13,6 +24,9 @@ export interface AppearanceData {
 export interface AppearanceUpsertInput {
     brandColor: string;
     headerColor: string | null;
+    defaultTheme: OrgTheme;
+    statusColors: StatusColors;
+    chartColors: string[];
     /** Готовые байты логотипа (если загружен новый) */
     logo?: Buffer;
     /** MIME-тип нового логотипа */
@@ -31,6 +45,9 @@ type AppearanceRow = {
     orgId: number;
     brandColor: string;
     headerColor: string | null;
+    defaultTheme: string;
+    statusColors: unknown;
+    chartColors: unknown;
     logoMime: string | null;
     updatedAt: Date;
 };
@@ -72,6 +89,9 @@ export class AppearanceService {
                 orgId,
                 brandColor: input.brandColor,
                 headerColor: input.headerColor,
+                defaultTheme: input.defaultTheme,
+                statusColors: input.statusColors,
+                chartColors: input.chartColors,
                 updatedBy,
                 logo: logo ?? null,
                 logoMime: logoMime ?? null
@@ -79,6 +99,9 @@ export class AppearanceService {
             update: {
                 brandColor: input.brandColor,
                 headerColor: input.headerColor,
+                defaultTheme: input.defaultTheme,
+                statusColors: input.statusColors,
+                chartColors: input.chartColors,
                 updatedBy,
                 ...(logo !== undefined ? {logo} : {}),
                 ...(logoMime !== undefined ? {logoMime} : {})
@@ -93,6 +116,11 @@ export class AppearanceService {
             orgId: row.orgId,
             brandColor: row.brandColor || DEFAULT_BRAND_COLOR,
             headerColor: row.headerColor,
+            defaultTheme: isOrgTheme(row.defaultTheme)
+                ? row.defaultTheme
+                : DEFAULT_ORG_THEME,
+            statusColors: normalizeStatusColors(row.statusColors),
+            chartColors: normalizeChartColors(row.chartColors),
             hasLogo: Boolean(row.logoMime),
             logoVersion: row.updatedAt.getTime().toString()
         };

@@ -10,10 +10,19 @@ import {
     BRAND_PRESETS,
     contrastColor,
     DEFAULT_BRAND_COLOR,
+    DEFAULT_CHART_COLORS,
+    DEFAULT_ORG_THEME,
+    DEFAULT_STATUS_COLORS,
     HEADER_PRESETS,
     LOGO_MIME_TYPES,
     MAX_LOGO_BYTES,
-    OrgTheme
+    STATUS_COLOR_KEYS,
+    THEME_PRESETS,
+    withAlpha,
+    type OrgTheme,
+    type StatusColorKey,
+    type StatusColors,
+    type ThemePreset
 } from '@/lib/org/branding.constants';
 import {useAuthStore} from '@/stores/auth.store';
 import {useTheme} from 'next-themes';
@@ -38,6 +47,28 @@ const THEME_OPTIONS: {value: OrgTheme; label: string; icon: typeof Sun}[] = [
     {value: 'system', label: 'Как в системе', icon: MonitorSmartphone}
 ];
 
+const STATUS_COLOR_LABELS: Record<StatusColorKey, string> = {
+    expected: 'Ожидается',
+    seated: 'За столом',
+    completed: 'Завершена',
+    cancelled: 'Отменена'
+};
+
+function isPresetActive(
+    preset: ThemePreset,
+    brandColor: string,
+    headerColor: string | null,
+    statusColors: StatusColors,
+    chartColors: string[]
+): boolean {
+    return (
+        preset.brandColor === brandColor &&
+        preset.headerColor === headerColor &&
+        STATUS_COLOR_KEYS.every(key => preset.statusColors[key] === statusColors[key]) &&
+        preset.chartColors.every((color, index) => color === chartColors[index])
+    );
+}
+
 export default function AppearancePage() {
     const {appearance, orgName, loading} = useBranding();
     const permissions = useAuthStore(state => state.permissions);
@@ -48,7 +79,14 @@ export default function AppearancePage() {
 
     // При смене сохранённого оформления форма пересоздаётся с новыми значениями
     const formKey = appearance
-        ? `${appearance.brandColor}|${appearance.headerColor ?? 'none'}|${appearance.logoVersion ?? 'no-logo'}`
+        ? JSON.stringify({
+              brand: appearance.brandColor,
+              header: appearance.headerColor,
+              theme: appearance.defaultTheme,
+              status: appearance.statusColors,
+              chart: appearance.chartColors,
+              logo: appearance.logoVersion
+          })
         : 'empty';
 
     return (
@@ -126,7 +164,7 @@ export default function AppearancePage() {
 /** Личная тема: применяется сразу, хранится в браузере */
 function PersonalThemeSection() {
     const {theme} = useTheme();
-    const {chooseTheme} = useBranding();
+    const {chooseTheme, appearance, resetToOrganizationTheme} = useBranding();
 
     return (
         <section>
@@ -156,6 +194,15 @@ function PersonalThemeSection() {
                 Выбор сохраняется для вашего аккаунта в этом браузере и имеет приоритет над темой
                 организации.
             </p>
+            {appearance && (
+                <button
+                    type='button'
+                    onClick={resetToOrganizationTheme}
+                    className='mt-2 text-xs font-medium text-brand transition-colors hover:text-brand/80'
+                >
+                    Использовать тему организации по умолчанию
+                </button>
+            )}
         </section>
     );
 }
@@ -174,9 +221,33 @@ function AppearanceForm({appearance, orgName, canEdit, canEditLogo}: AppearanceF
     const [headerColor, setHeaderColor] = useState<string | null>(
         appearance?.headerColor ?? null
     );
+    const [defaultTheme, setDefaultTheme] = useState<OrgTheme>(
+        appearance?.defaultTheme ?? DEFAULT_ORG_THEME
+    );
+    const [statusColors, setStatusColors] = useState<StatusColors>({
+        ...(appearance?.statusColors ?? DEFAULT_STATUS_COLORS)
+    });
+    const [chartColors, setChartColors] = useState<string[]>([
+        ...(appearance?.chartColors ?? DEFAULT_CHART_COLORS)
+    ]);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [logoRemoved, setLogoRemoved] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const applyPreset = (preset: ThemePreset) => {
+        setBrandColor(preset.brandColor);
+        setHeaderColor(preset.headerColor);
+        setStatusColors({...preset.statusColors});
+        setChartColors([...preset.chartColors]);
+    };
+
+    const updateStatusColor = (key: StatusColorKey, value: string) => {
+        setStatusColors(current => ({...current, [key]: value}));
+    };
+
+    const updateChartColor = (index: number, value: string) => {
+        setChartColors(current => current.map((color, i) => (i === index ? value : color)));
+    };
 
     const resetLogo = () => {
         setLogoPreview(null);
@@ -209,6 +280,9 @@ function AppearanceForm({appearance, orgName, canEdit, canEditLogo}: AppearanceF
         const input: BrandingSaveInput = {
             brandColor,
             headerColor,
+            defaultTheme,
+            statusColors,
+            chartColors,
             ...(logoPreview ? {logoDataUrl: logoPreview} : {}),
             ...(logoRemoved && !logoPreview ? {removeLogo: true} : {})
         };
@@ -227,6 +301,75 @@ function AppearanceForm({appearance, orgName, canEdit, canEditLogo}: AppearanceF
 
     return (
         <fieldset disabled={!canEdit || saving} className='space-y-7'>
+            {/* Готовые темы */}
+            <section>
+                <Label className='mb-2 block text-xs font-medium uppercase tracking-wider text-app-muted'>
+                    Готовые темы
+                </Label>
+                <p className='mb-3 text-xs text-app-subtle'>
+                    Один клик задаёт акцент, шапку, цвета статусов и палитру графиков.
+                    Не забудьте сохранить.
+                </p>
+                <div className='grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3'>
+                    {THEME_PRESETS.map(preset => {
+                        const active = isPresetActive(
+                            preset,
+                            brandColor,
+                            headerColor,
+                            statusColors,
+                            chartColors
+                        );
+
+                        return (
+                            <button
+                                key={preset.key}
+                                type='button'
+                                onClick={() => applyPreset(preset)}
+                                className={[
+                                    'rounded-xl border p-3 text-left transition-colors',
+                                    active
+                                        ? 'border-brand/60 bg-brand/5'
+                                        : 'border-app-border bg-surface-2/30 hover:border-app-border hover:bg-surface-2/60'
+                                ].join(' ')}
+                            >
+                                <div className='flex items-center justify-between gap-2'>
+                                    <div className='flex -space-x-1'>
+                                        {[
+                                            preset.brandColor,
+                                            ...preset.chartColors.slice(0, 3)
+                                        ].map((color, index) => (
+                                            <span
+                                                key={`${color}-${index}`}
+                                                className='h-5 w-5 rounded-full border-2 border-surface'
+                                                style={{backgroundColor: color}}
+                                            />
+                                        ))}
+                                    </div>
+                                    {active && <Check size={15} className='text-brand' />}
+                                </div>
+                                <p className='mt-2 text-sm font-medium text-app-fg'>
+                                    {preset.name}
+                                </p>
+                                <p className='text-[11px] text-app-subtle'>
+                                    {preset.description}
+                                </p>
+                                <div className='mt-2 flex gap-1'>
+                                    {STATUS_COLOR_KEYS.map(key => (
+                                        <span
+                                            key={key}
+                                            className='h-1.5 flex-1 rounded-full'
+                                            style={{
+                                                backgroundColor: preset.statusColors[key]
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+            </section>
+
             {/* Основной цвет */}
             <section>
                 <Label className='mb-2 block text-xs font-medium uppercase tracking-wider text-app-muted'>
@@ -313,6 +456,106 @@ function AppearanceForm({appearance, orgName, canEdit, canEditLogo}: AppearanceF
                         />
                         Свой цвет
                     </label>
+                </div>
+            </section>
+
+            {/* Тема организации по умолчанию */}
+            <section>
+                <Label className='mb-2 block text-xs font-medium uppercase tracking-wider text-app-muted'>
+                    Тема по умолчанию для сотрудников
+                </Label>
+                <div className='inline-flex flex-wrap gap-1 rounded-xl border border-app-border bg-surface-2/40 p-1'>
+                    {THEME_OPTIONS.map(option => {
+                        const Icon = option.icon;
+                        const isActive = defaultTheme === option.value;
+
+                        return (
+                            <button
+                                key={option.value}
+                                type='button'
+                                onClick={() => setDefaultTheme(option.value)}
+                                className={[
+                                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors',
+                                    isActive
+                                        ? 'bg-surface font-medium text-app-fg shadow-sm'
+                                        : 'text-app-muted hover:text-app-fg'
+                                ].join(' ')}
+                            >
+                                <Icon size={15} />
+                                {option.label}
+                            </button>
+                        );
+                    })}
+                </div>
+                <p className='mt-2 text-xs text-app-subtle'>
+                    Применяется к сотрудникам, которые ещё не выбрали личную тему.
+                </p>
+            </section>
+
+            {/* Цвета статусов */}
+            <section>
+                <Label className='mb-2 block text-xs font-medium uppercase tracking-wider text-app-muted'>
+                    Цвета статусов
+                </Label>
+                <p className='mb-3 text-xs text-app-subtle'>
+                    Используются в бейджах и лентах статусов броней.
+                </p>
+                <div className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
+                    {STATUS_COLOR_KEYS.map(key => (
+                        <div
+                            key={key}
+                            className='flex items-center justify-between gap-3 rounded-lg border border-app-border bg-surface-2/30 px-3 py-2'
+                        >
+                            <span className='flex items-center gap-2 text-sm text-app-muted'>
+                                <span
+                                    className='h-2.5 w-2.5 rounded-full'
+                                    style={{backgroundColor: statusColors[key]}}
+                                />
+                                {STATUS_COLOR_LABELS[key]}
+                            </span>
+                            <span className='flex items-center gap-2'>
+                                <span className='font-mono text-[10px] uppercase text-app-subtle'>
+                                    {statusColors[key]}
+                                </span>
+                                <input
+                                    type='color'
+                                    value={statusColors[key]}
+                                    onChange={event =>
+                                        updateStatusColor(key, event.target.value)
+                                    }
+                                    className='h-6 w-6 cursor-pointer rounded border-0 bg-transparent p-0'
+                                />
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* Палитра графиков */}
+            <section>
+                <Label className='mb-2 block text-xs font-medium uppercase tracking-wider text-app-muted'>
+                    Палитра графиков
+                </Label>
+                <p className='mb-3 text-xs text-app-subtle'>
+                    Пять цветов для графиков и диаграмм.
+                </p>
+                <div className='flex flex-wrap gap-2'>
+                    {chartColors.map((color, index) => (
+                        <label
+                            key={index}
+                            className='flex cursor-pointer items-center gap-2 rounded-lg border border-app-border bg-surface-2/30 px-3 py-2 text-xs text-app-muted'
+                        >
+                            <input
+                                type='color'
+                                value={color}
+                                onChange={event =>
+                                    updateChartColor(index, event.target.value)
+                                }
+                                className='h-5 w-5 cursor-pointer rounded border-0 bg-transparent p-0'
+                            />
+                            График {index + 1}
+                        </label>
+                    ))}
                 </div>
             </section>
 
@@ -434,13 +677,39 @@ function AppearanceForm({appearance, orgName, canEdit, canEditLogo}: AppearanceF
                             Кнопка
                         </span>
                     </div>
-                    <div className='space-y-2 bg-app p-3'>
+                    <div className='space-y-3 bg-app p-3'>
                         <div className='h-2.5 w-2/3 rounded-full bg-app-fg/10' />
                         <div className='h-2.5 w-1/2 rounded-full bg-app-fg/10' />
                         <div
                             className='h-2.5 w-1/3 rounded-full'
                             style={{backgroundColor: brandColor}}
                         />
+                        <div className='flex flex-wrap gap-1.5'>
+                            {STATUS_COLOR_KEYS.map(key => (
+                                <span
+                                    key={key}
+                                    className='rounded-full px-2 py-0.5 text-[10px] font-medium'
+                                    style={{
+                                        color: statusColors[key],
+                                        backgroundColor: withAlpha(statusColors[key], 0.14)
+                                    }}
+                                >
+                                    {STATUS_COLOR_LABELS[key]}
+                                </span>
+                            ))}
+                        </div>
+                        <div className='flex items-end gap-1.5'>
+                            {chartColors.map((color, index) => (
+                                <span
+                                    key={index}
+                                    className='w-4 rounded-t'
+                                    style={{
+                                        backgroundColor: color,
+                                        height: `${12 + index * 5}px`
+                                    }}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
             </section>
@@ -462,6 +731,13 @@ function AppearanceForm({appearance, orgName, canEdit, canEditLogo}: AppearanceF
                         onClick={() => {
                             setBrandColor(appearance?.brandColor ?? DEFAULT_BRAND_COLOR);
                             setHeaderColor(appearance?.headerColor ?? null);
+                            setDefaultTheme(appearance?.defaultTheme ?? DEFAULT_ORG_THEME);
+                            setStatusColors({
+                                ...(appearance?.statusColors ?? DEFAULT_STATUS_COLORS)
+                            });
+                            setChartColors([
+                                ...(appearance?.chartColors ?? DEFAULT_CHART_COLORS)
+                            ]);
                             resetLogo();
                         }}
                     >

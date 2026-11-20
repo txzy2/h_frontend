@@ -63,8 +63,8 @@ export function RevenueAreaChart({points}: {points: RevenuePoint[]}) {
                 >
                     <defs>
                         <linearGradient id='revenue-fill' x1='0' y1='0' x2='0' y2='1'>
-                            <stop offset='0%' stopColor='var(--brand)' stopOpacity='0.35' />
-                            <stop offset='100%' stopColor='var(--brand)' stopOpacity='0' />
+                            <stop offset='0%' stopColor='var(--chart-1)' stopOpacity='0.35' />
+                            <stop offset='100%' stopColor='var(--chart-1)' stopOpacity='0' />
                         </linearGradient>
                     </defs>
 
@@ -72,7 +72,7 @@ export function RevenueAreaChart({points}: {points: RevenuePoint[]}) {
                     <path
                         d={linePath}
                         fill='none'
-                        stroke='var(--brand)'
+                        stroke='var(--chart-1)'
                         strokeWidth={2}
                         vectorEffect='non-scaling-stroke'
                         strokeLinejoin='round'
@@ -86,7 +86,7 @@ export function RevenueAreaChart({points}: {points: RevenuePoint[]}) {
                                 cx={coord.x}
                                 cy={coord.y}
                                 r={3}
-                                fill='var(--brand)'
+                                fill='var(--chart-1)'
                                 vectorEffect='non-scaling-stroke'
                             >
                                 <title>
@@ -272,7 +272,7 @@ export function Sparkline({values, className}: {values: number[]; className?: st
             <polyline
                 points={points}
                 fill='none'
-                stroke='var(--brand)'
+                stroke='var(--chart-1)'
                 strokeWidth={2}
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -310,7 +310,7 @@ export function LoadHeatmap({days, hours, values}: HeatmapData) {
                                 title={`${day}, ${hours[hourIndex] ?? ''} — загрузка ${intensity}%`}
                                 className='h-5 flex-1 rounded-[3px] border border-app-border/40'
                                 style={{
-                                    backgroundColor: `color-mix(in oklab, var(--brand) ${Math.max(intensity, 6)}%, transparent)`
+                                    backgroundColor: `color-mix(in oklab, var(--chart-1) ${Math.max(intensity, 6)}%, transparent)`
                                 }}
                             />
                         );
@@ -325,7 +325,7 @@ export function LoadHeatmap({days, hours, values}: HeatmapData) {
                         key={level}
                         className='h-2.5 w-4 rounded-[3px]'
                         style={{
-                            backgroundColor: `color-mix(in oklab, var(--brand) ${level}%, transparent)`
+                            backgroundColor: `color-mix(in oklab, var(--chart-1) ${level}%, transparent)`
                         }}
                     />
                 ))}

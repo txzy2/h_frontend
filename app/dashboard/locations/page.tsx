@@ -4,7 +4,7 @@ import {useCallback, useEffect, useState} from 'react';
 import Link from 'next/link';
 import axios from 'axios';
 import {toast} from 'sonner';
-import type {Organization} from '@/types/org';
+import type {Organization, OrganizationLocation} from '@/types/org';
 import {useAuthStore} from '@/stores/auth.store';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -21,7 +21,18 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator
 } from '@/components/ui/breadcrumb';
-import {Armchair, Building2, Clock, Loader2, MapPin, Phone, Plus, X} from 'lucide-react';
+import {
+    Armchair,
+    Building2,
+    Clock,
+    LayoutGrid,
+    Loader2,
+    MapPin,
+    Pencil,
+    Phone,
+    Plus,
+    X
+} from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,6 +41,7 @@ interface LocationForm {
     address: string;
     phone: string;
     activePlaces: number | '';
+    status: string;
 }
 
 interface LocationErrors {
@@ -37,10 +49,17 @@ interface LocationErrors {
     address?: string;
     phone?: string;
     activePlaces?: string;
+    status?: string;
     general?: string;
 }
 
-const EMPTY_FORM: LocationForm = {name: '', address: '', phone: '', activePlaces: ''};
+const EMPTY_FORM: LocationForm = {
+    name: '',
+    address: '',
+    phone: '',
+    activePlaces: '',
+    status: 'Active'
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -90,6 +109,7 @@ export default function LocationsPage() {
     const [error, setError] = useState<string | null>(null);
 
     const [showForm, setShowForm] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
     const [form, setForm] = useState<LocationForm>(EMPTY_FORM);
     const [formErrors, setFormErrors] = useState<LocationErrors>({});
     const [saving, setSaving] = useState(false);
@@ -125,6 +145,22 @@ export default function LocationsPage() {
         loadOrg();
     }, [loadOrg]);
 
+    useEffect(() => {
+        if (!showForm) return;
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && !saving) {
+                setShowForm(false);
+                setEditingId(null);
+                setForm(EMPTY_FORM);
+                setFormErrors({});
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [showForm, saving]);
+
     const canManage = user?.role === 'Admin' || user?.role === 'SuperUser';
     const canAdd = canManage && org?.status === 'Active';
 
@@ -135,8 +171,23 @@ export default function LocationsPage() {
 
     const closeForm = () => {
         setShowForm(false);
+        setEditingId(null);
         setForm(EMPTY_FORM);
         setFormErrors({});
+    };
+
+    const openEdit = (location: OrganizationLocation) => {
+        setEditingId(location.id);
+        setForm({
+            name: location.name,
+            address: location.address,
+            phone: location.phone ?? '',
+            activePlaces: location.activePlaces,
+            status: location.status
+        });
+        setFormErrors({});
+        setShowForm(true);
+        window.scrollTo({top: 0, behavior: 'smooth'});
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -151,15 +202,22 @@ export default function LocationsPage() {
         setFormErrors({});
 
         try {
-            const {data} = await axios.post('/api/locations', {
+            const payload = {
                 name: form.name.trim(),
                 address: form.address.trim(),
                 phone: normalizePhone(form.phone),
                 activePlaces: Number(form.activePlaces)
-            });
+            };
+            const {data} = editingId
+                ? await axios.patch('/api/locations', {
+                      id: editingId,
+                      ...payload,
+                      status: form.status
+                  })
+                : await axios.post('/api/locations', payload);
 
             if (data.success) {
-                toast.success('Точка добавлена');
+                toast.success(editingId ? 'Точка обновлена' : 'Точка добавлена');
                 closeForm();
                 await loadOrg();
             }
@@ -209,7 +267,12 @@ export default function LocationsPage() {
                 </div>
                 {canAdd && !showForm && (
                     <Button
-                        onClick={() => setShowForm(true)}
+                        onClick={() => {
+                            setEditingId(null);
+                            setForm(EMPTY_FORM);
+                            setFormErrors({});
+                            setShowForm(true);
+                        }}
                         className='bg-brand font-semibold text-brand-fg hover:bg-brand/90'
                     >
                         <Plus size={15} />
@@ -218,18 +281,32 @@ export default function LocationsPage() {
                 )}
             </div>
 
-            {/* Форма добавления */}
+            {/* Попап добавления/редактирования точки */}
             {showForm && (
-                <div className='mb-6 rounded-2xl border border-app-border bg-surface/60 p-6 backdrop-blur-sm'>
+                <div
+                    className='fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center'
+                    onMouseDown={event => {
+                        if (event.target === event.currentTarget && !saving) closeForm();
+                    }}
+                >
+                    <div className='max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-app-border bg-surface p-6 shadow-2xl sm:rounded-2xl'>
                     <div className='mb-5 flex items-start justify-between'>
                         <div className='flex items-center gap-3'>
                             <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-brand/10'>
-                                <Plus size={18} className='text-brand' />
+                                {editingId ? (
+                                    <Pencil size={18} className='text-brand' />
+                                ) : (
+                                    <Plus size={18} className='text-brand' />
+                                )}
                             </div>
                             <div>
-                                <h2 className='text-sm font-semibold text-app-fg'>Новая точка</h2>
+                                <h2 className='text-sm font-semibold text-app-fg'>
+                                    {editingId ? 'Редактировать точку' : 'Новая точка'}
+                                </h2>
                                 <p className='text-xs text-app-subtle'>
-                                    Заполните данные точки продаж
+                                    {editingId
+                                        ? 'Измените данные точки продаж'
+                                        : 'Заполните данные точки продаж'}
                                 </p>
                             </div>
                         </div>
@@ -281,7 +358,7 @@ export default function LocationsPage() {
                                     className={inputCls(formErrors.phone)}
                                 />
                             </Field>
-                            <Field label='Активных мест' error={formErrors.activePlaces}>
+                            <Field label='Количество столов' error={formErrors.activePlaces}>
                                 <Input
                                     type='number'
                                     min={1}
@@ -294,6 +371,35 @@ export default function LocationsPage() {
                                 />
                             </Field>
                         </div>
+
+                        {editingId !== null && (
+                            <Field label='Статус точки'>
+                                <select
+                                    value={form.status}
+                                    disabled={saving}
+                                    onChange={event =>
+                                        updateForm('status', event.target.value)
+                                    }
+                                    className='h-9 w-full cursor-pointer rounded-md border border-app-border bg-surface-2/50 px-3 text-sm text-app-fg outline-none focus:border-brand/60 disabled:opacity-40'
+                                >
+                                    <option value='Active'>Активна</option>
+                                    <option value='Inactive'>Неактивна</option>
+                                    <option value='Pending'>На проверке</option>
+                                    <option value='Closed'>Закрыта</option>
+                                </select>
+                            </Field>
+                        )}
+
+                        <p className='text-xs text-app-subtle'>
+                            Столы и их расстановка настраиваются в{' '}
+                            <Link
+                                href='/dashboard/floor-plan'
+                                className='font-medium text-brand hover:text-brand/80'
+                            >
+                                плане зала
+                            </Link>
+                            .
+                        </p>
 
                         <div className='flex gap-3 pt-2'>
                             <Button
@@ -315,12 +421,15 @@ export default function LocationsPage() {
                                         <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                                         Сохранение...
                                     </>
+                                ) : editingId ? (
+                                    'Сохранить изменения'
                                 ) : (
                                     'Добавить точку'
                                 )}
                             </Button>
                         </div>
                     </form>
+                    </div>
                 </div>
             )}
 
@@ -372,7 +481,12 @@ export default function LocationsPage() {
                             </p>
                             {canAdd && (
                                 <Button
-                                    onClick={() => setShowForm(true)}
+                                    onClick={() => {
+                                        setEditingId(null);
+                                        setForm(EMPTY_FORM);
+                                        setFormErrors({});
+                                        setShowForm(true);
+                                    }}
                                     className='mt-5 bg-brand font-semibold text-brand-fg hover:bg-brand/90'
                                 >
                                     <Plus size={15} />
@@ -416,9 +530,31 @@ export default function LocationsPage() {
                                             )}
                                             <InfoRow
                                                 icon={Armchair}
-                                                text={`${location.activePlaces} активных мест`}
+                                                text={`Столов: ${location.activePlaces}`}
                                             />
                                         </div>
+
+                                        {canManage && (
+                                            <div className='mt-4 flex flex-wrap items-center gap-2 border-t border-app-border/60 pt-3'>
+                                                <Button
+                                                    type='button'
+                                                    variant='outline'
+                                                    size='sm'
+                                                    onClick={() => openEdit(location)}
+                                                    className='h-8 gap-1.5 border-app-border text-app-muted hover:bg-surface-2 hover:text-app-fg'
+                                                >
+                                                    <Pencil size={13} />
+                                                    Редактировать
+                                                </Button>
+                                                <Link
+                                                    href='/dashboard/floor-plan'
+                                                    className='inline-flex h-8 items-center gap-1.5 rounded-md border border-app-border px-3 text-xs font-medium text-app-muted transition-colors hover:bg-surface-2 hover:text-app-fg'
+                                                >
+                                                    <LayoutGrid size={13} />
+                                                    План зала
+                                                </Link>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}

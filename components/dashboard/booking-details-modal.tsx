@@ -5,6 +5,7 @@ import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {formatMoney} from '@/lib/format';
 import {formatPhone} from '@/lib/phone';
+import {bookingStatusKey, statusBadgeStyle} from '@/lib/org/status';
 import {BookingActionDetails, BookingDetails, BookingDetailsResponse} from '@/types/bookings';
 import axios from 'axios';
 import {
@@ -88,15 +89,7 @@ function statusLabel(booking: BookingDetails): string {
     return 'Ожидается';
 }
 
-function statusClassName(booking: BookingDetails): string {
-    if (booking.status === 'Completed') return 'bg-app-fg/10 text-app-muted';
-    if (booking.status === 'Cancelled') return 'bg-red-500/10 text-red-400';
-    if (booking.seatedAt && !booking.completedAt) {
-        return 'bg-emerald-500/10 text-emerald-400';
-    }
 
-    return 'bg-brand/10 text-brand';
-}
 
 export function BookingDetailsModal({
     open,
@@ -374,9 +367,14 @@ export function BookingDetailsModal({
                                             </p>
                                         </div>
                                         <span
-                                            className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${statusClassName(
-                                                details
-                                            )}`}
+                                            className='rounded-full px-2.5 py-1 text-[11px] font-medium'
+                                            style={statusBadgeStyle(
+                                                bookingStatusKey(
+                                                    details.status,
+                                                    details.seatedAt,
+                                                    details.completedAt
+                                                )
+                                            )}
                                         >
                                             {statusLabel(details)}
                                         </span>

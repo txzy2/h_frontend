@@ -1,6 +1,14 @@
 'use client';
 
-import {contrastColor, DEFAULT_BRAND_COLOR, OrgTheme} from '@/lib/org/branding.constants';
+import {
+    contrastColor,
+    DEFAULT_BRAND_COLOR,
+    DEFAULT_CHART_COLORS,
+    DEFAULT_ORG_THEME,
+    DEFAULT_STATUS_COLORS,
+    type OrgTheme,
+    type StatusColors
+} from '@/lib/org/branding.constants';
 import {useAuthStore} from '@/stores/auth.store';
 import {
     OrganizationAppearance,
@@ -22,6 +30,9 @@ import {
 export type BrandingSaveInput = {
     brandColor: string;
     headerColor: string | null;
+    defaultTheme: OrgTheme;
+    statusColors: StatusColors;
+    chartColors: string[];
     logoDataUrl?: string;
     removeLogo?: boolean;
 };
@@ -35,15 +46,30 @@ type BrandingContextValue = {
     save: (input: BrandingSaveInput) => Promise<boolean>;
     refresh: () => Promise<void>;
     chooseTheme: (theme: OrgTheme) => void;
+    resetToOrganizationTheme: () => void;
 };
 
 const BrandingContext = createContext<BrandingContextValue | null>(null);
 
 function applyToDocument(appearance: OrganizationAppearance | null): void {
     const root = document.documentElement;
+    const chartProperties = ['--chart-1', '--chart-2', '--chart-3', '--chart-4', '--chart-5'];
+    const statusProperties = [
+        '--status-expected',
+        '--status-seated',
+        '--status-completed',
+        '--status-cancelled'
+    ];
 
     if (!appearance) {
-        for (const property of ['--brand', '--brand-fg', '--header-bg', '--header-fg']) {
+        for (const property of [
+            '--brand',
+            '--brand-fg',
+            '--header-bg',
+            '--header-fg',
+            ...chartProperties,
+            ...statusProperties
+        ]) {
             root.style.removeProperty(property);
         }
         return;
@@ -60,6 +86,19 @@ function applyToDocument(appearance: OrganizationAppearance | null): void {
         root.style.removeProperty('--header-bg');
         root.style.removeProperty('--header-fg');
     }
+
+    const chartColors = appearance.chartColors?.length
+        ? appearance.chartColors
+        : DEFAULT_CHART_COLORS;
+    chartColors.slice(0, 5).forEach((color, index) => {
+        root.style.setProperty(chartProperties[index], color);
+    });
+
+    const statusColors = appearance.statusColors ?? DEFAULT_STATUS_COLORS;
+    root.style.setProperty('--status-expected', statusColors.expected);
+    root.style.setProperty('--status-seated', statusColors.seated);
+    root.style.setProperty('--status-completed', statusColors.completed);
+    root.style.setProperty('--status-cancelled', statusColors.cancelled);
 }
 
 export function BrandingProvider({children}: {children: ReactNode}) {
@@ -72,6 +111,30 @@ export function BrandingProvider({children}: {children: ReactNode}) {
     const [saving, setSaving] = useState(false);
     const isMountedRef = useRef(true);
     const loadedUserIdRef = useRef<string | null>(null);
+
+    const applyOrganizationTheme = useCallback(
+        (theme: OrgTheme) => {
+            try {
+                const explicit = localStorage.getItem('theme-user-choice') === '1';
+                const auto = localStorage.getItem('theme-auto') === '1';
+                const stored = localStorage.getItem('theme') !== null;
+
+                // Пользователь уже выбрал тему раньше — не перебиваем.
+                if (!explicit && !auto && stored) {
+                    localStorage.setItem('theme-user-choice', '1');
+                    return;
+                }
+
+                if (!explicit) {
+                    localStorage.setItem('theme-auto', '1');
+                    setTheme(theme);
+                }
+            } catch {
+                setTheme(theme);
+            }
+        },
+        [setTheme]
+    );
 
     const refresh = useCallback(async () => {
         setLoading(true);
@@ -88,37 +151,64 @@ export function BrandingProvider({children}: {children: ReactNode}) {
             setAppearance(body.data);
             setOrgName(body.orgName);
             applyToDocument(body.data);
+            if (body.data) applyOrganizationTheme(body.data.defaultTheme);
         } catch {
             // не критично — останутся значения по умолчанию
         } finally {
             if (isMountedRef.current) setLoading(false);
         }
-    }, []);
+    }, [applyOrganizationTheme]);
 
-    const save = useCallback(async (input: BrandingSaveInput): Promise<boolean> => {
-        setSaving(true);
+    const save = useCallback(
+        async (input: BrandingSaveInput): Promise<boolean> => {
+            setSaving(true);
+            try {
+                const response = await fetch('/api/org/appearance', {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'same-origin',
+                    body: JSON.stringify(input)
+                });
+
+                const body =
+                    (await response.json()) as UpdateOrganizationAppearanceResponse;
+                if (!response.ok || !body.success) return false;
+
+                setAppearance(body.data);
+                applyToDocument(body.data);
+                applyOrganizationTheme(body.data.defaultTheme);
+                return true;
+            } catch {
+                return false;
+            } finally {
+                if (isMountedRef.current) setSaving(false);
+            }
+        },
+        [applyOrganizationTheme]
+    );
+
+    const chooseTheme = useCallback(
+        (theme: OrgTheme) => {
+            try {
+                localStorage.setItem('theme-user-choice', '1');
+                localStorage.removeItem('theme-auto');
+            } catch {
+                // localStorage может быть недоступен
+            }
+            setTheme(theme);
+        },
+        [setTheme]
+    );
+
+    const resetToOrganizationTheme = useCallback(() => {
         try {
-            const response = await fetch('/api/org/appearance', {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                credentials: 'same-origin',
-                body: JSON.stringify(input)
-            });
-
-            const body = (await response.json()) as UpdateOrganizationAppearanceResponse;
-            if (!response.ok || !body.success) return false;
-
-            setAppearance(body.data);
-            applyToDocument(body.data);
-            return true;
+            localStorage.setItem('theme-auto', '1');
+            localStorage.removeItem('theme-user-choice');
         } catch {
-            return false;
-        } finally {
-            if (isMountedRef.current) setSaving(false);
+            // localStorage может быть недоступен
         }
-    }, []);
-
-    const chooseTheme = useCallback((theme: OrgTheme) => setTheme(theme), [setTheme]);
+        setTheme(appearance?.defaultTheme ?? DEFAULT_ORG_THEME);
+    }, [appearance, setTheme]);
 
     useEffect(() => {
         isMountedRef.current = true;
@@ -157,9 +247,20 @@ export function BrandingProvider({children}: {children: ReactNode}) {
             saving,
             save,
             refresh,
-            chooseTheme
+            chooseTheme,
+            resetToOrganizationTheme
         }),
-        [appearance, orgName, logoUrl, loading, saving, save, refresh, chooseTheme]
+        [
+            appearance,
+            orgName,
+            logoUrl,
+            loading,
+            saving,
+            save,
+            refresh,
+            chooseTheme,
+            resetToOrganizationTheme
+        ]
     );
 
     return <BrandingContext.Provider value={value}>{children}</BrandingContext.Provider>;
